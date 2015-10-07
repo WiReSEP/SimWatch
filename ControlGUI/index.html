@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>SimWatch Control Interface</title>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" type="text/css" href="style.css" />
+		<script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
+	</head>
+	<body>
+		<div class="col-sm-2 col-md-1 sidebar">
+			<ul class="nav nav-sidebar">
+				<li><a href="#" id="loadProfiles" class="disabled">Profile</a></li>
+				<li><a href="#" id="save">speichern</a></li>
+			</ul>
+		</div>
+		
+		<div id="profile_column" class="col-sm-3 col-md-1 sidebar hidden">
+			<ul id="profiles" class="nav nav-sidebar">
+			</ul>
+		</div>
+		
+		<pre id="editor">"javascript is kill"</pre>
+		
+		<script src="ace-builds/src/ace.js"></script>
+		
+		<script type="text/javascript" src="js/ci.js"></script>
+		
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<script src="js/bootstrap.min.js"></script>
+	</body>
+</html>
