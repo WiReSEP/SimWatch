@@ -7,12 +7,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Update {
-    public JsonObject data;
 
     public Set<String> attachments;
+    private JsonObject data;
 
     public Update(JsonObject data, Set<String> attachments) {
         this.data = data;
-        this.attachments = new HashSet<String>(attachments);
+        this.attachments = new HashSet<>(attachments);
+    }
+
+    public JsonObject getData() {
+        return data;
     }
 }

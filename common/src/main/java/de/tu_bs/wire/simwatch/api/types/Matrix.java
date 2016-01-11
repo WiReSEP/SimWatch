@@ -4,19 +4,21 @@ import java.util.Arrays;
 
 public class Matrix {
     private int width, height;
-    private double[] data;
+    private double[][] data;
 
     public Matrix(Number[][] data) {
-        if (data == null || data.length == 0 || data[0].length == 0)
+        if (data == null || data.length == 0 || data[0].length == 0) {
             throw new IllegalArgumentException("Matrix data must be at least 1x1 and not null");
+        }
         this.height = data.length;
         this.width = data[0].length;
-        this.data = new double[width * height];
-        int i = 0;
-        for (Number[] line : data) {
+        this.data = new double[height][width];
+        for (int i = 0; i < height; i++) {
+            Number[] line = data[i];
             if (line.length == this.width) {
-                for (Number number : line) {
-                    this.data[i++] = number.doubleValue();
+                for (int j = 0; j < height; j++) {
+                    Number number = line[j];
+                    this.data[i][j] = number.doubleValue();
                 }
             } else {
                 throw new IllegalArgumentException("All rows must be of equal size");
@@ -27,7 +29,7 @@ public class Matrix {
     public double get(int x, int y) {
         if (x < 0 || y < 0 || x >= width || y >= height)
             throw new IndexOutOfBoundsException();
-        return data[y * width + x];
+        return data[y][x];
     }
 
     public int getWidth() {
@@ -47,7 +49,7 @@ public class Matrix {
 
         return width == matrix.width
                 && height == matrix.height
-                && Arrays.equals(data, matrix.data);
+                && Arrays.deepEquals(data, matrix.data);
     }
 
     @Override
