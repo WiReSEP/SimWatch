@@ -21,7 +21,7 @@ public final class UpdateBuilder {
     /*package*/ UpdateBuilder(ApiConnector connector) {
         this.connector = connector;
         this.data = new JsonObject();
-        this.attachments = new HashMap<String, InputStream>();
+        this.attachments = new HashMap<>();
         gson = new Gson();
     }
 

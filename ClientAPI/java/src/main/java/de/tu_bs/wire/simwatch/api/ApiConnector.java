@@ -29,9 +29,7 @@ public class ApiConnector {
     }
 
     public void register(String name, String profile) {
-        Instance instance = new Instance();
-        instance.name = name;
-        instance.profile = profile;
+        Instance instance = new Instance(null, null, name, profile);
         simInstance = backendService.register(instance);
     }
 
@@ -43,7 +41,7 @@ public class ApiConnector {
         if (simInstance == null) {
             throw new IllegalStateException("Must register first");
         }
-        backendService.update(simInstance._id, update);
+        backendService.update(simInstance.getID(), update);
     }
 
 }
