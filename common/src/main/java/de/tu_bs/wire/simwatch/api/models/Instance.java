@@ -1,38 +1,46 @@
 package de.tu_bs.wire.simwatch.api.models;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Instance {
-    private final String
-            _id,
-            name,
-            profile;
-    /**
-     * static attributes of this Instance
-     */
-    private JsonObject data;
+    @SerializedName("_id")
+    private final String ID;
+    private final String name, profile;
+
     /**
      * List of all known updates in chronological order
      */
     private List<Update> updates;
 
-    public Instance(JsonObject data, String _id, String name, String profile) {
-        this.data = data;
+    public Instance(JsonObject data, String ID, String name, String profile) {
         updates = new ArrayList<>();
-        this._id = _id;
+        this.ID = ID;
         this.name = name;
         this.profile = profile;
     }
 
-    public Instance(JsonObject data, List<Update> updates, String _id, String name, String profile) {
-        this.data = data;
+    public Instance(JsonObject data, List<Update> updates, String ID, String name, String profile) {
         this.updates = new ArrayList<>(updates);
-        this._id = _id;
+        this.ID = ID;
         this.name = name;
         this.profile = profile;
+    }
+
+    public static Instance fromString(String str) {
+        return new Gson().fromJson(str, Instance.class);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getID() {
+        return ID;
     }
 
     /**
@@ -56,19 +64,36 @@ public class Instance {
         for (int j = updates.size() - 1; j >= 0; j++) {
             snapshot.addData(updates.get(j).getData());
         }
-        snapshot.addData(data);
         return null;
     }
 
-    public void addAll(List<Update> updates) {
+    /**
+     * Adds all updates given to this simulation in order. Duplicate updates, will be omitted. The
+     * addition of subsequent, non-duplicate Updates is unaffected
+     *
+     * @param updates Updates to add in order
+     * @return true, if any of the updates were new, false otherwise
+     */
+    public boolean addAll(List<Update> updates) {
+        boolean changeHappened = false;
         for (Update update : updates) {
-            add(update);
+            if (add(update)) {
+                changeHappened = true;
+            }
         }
+        return changeHappened;
     }
 
-    public void add(Update u) {
+    public int getNumberOfUpdates() {
+        return updates.size();
+    }
+
+    public boolean add(Update u) {
         if (!updates.contains(u)) {
             updates.add(u);
+            return true;
+        } else {
+            return false;
         }
     }
 }
