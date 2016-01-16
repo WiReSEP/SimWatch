@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-import logging, sys
+# -*- coding: utf-8 -*-
+import logging, sys
 
 logger = logging.getLogger('logger')
 logger.setLevel(logging.DEBUG)
