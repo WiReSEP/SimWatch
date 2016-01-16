@@ -1,4 +1,4 @@
-__author__ = 'steffen'
+# -*- coding: utf-8 -*-
 from flask import Flask, request, Response
 import database, instance
 from log import logger

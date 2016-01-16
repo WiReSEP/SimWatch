@@ -1,4 +1,4 @@
-__author__ = 'steffen'
+# -*- coding: utf-8 -*-
 import json, logging, datetime, database
 from log import logger
 from bson import json_util

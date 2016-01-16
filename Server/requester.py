@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import requests, json, logging, sys
 from log import logger
 

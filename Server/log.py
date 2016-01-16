@@ -1,5 +1,4 @@
-__author__ = 'steffen'
-import logging, sys
+# -*- coding: utf-8 -*-import logging, sys
 
 logger = logging.getLogger('logger')
 logger.setLevel(logging.DEBUG)

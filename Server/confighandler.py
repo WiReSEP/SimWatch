@@ -1,5 +1,4 @@
-__author__ = 'steffen'
-
+# -*- coding: utf-8 -*-
 import yaml, log
 from log import logger
 

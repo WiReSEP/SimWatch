@@ -1,5 +1,4 @@
-__author__ = 'steffen'
-
+# -*- coding: utf-8 -*-
 from pymongo import MongoClient
 import datetime, instance
 from log import logger
@@ -15,7 +14,7 @@ ID = '_id'
 
 class DataBase:
     confighandler = confighandler.ApiConfig()
-    client = MongoClient(host=confighandler.mongo_host, port=confighandler.port)
+    client = MongoClient(host=confighandler.mongo_host, port=confighandler.mongo_port)
     db = client['test_database']
     instances = db['instances']
     profiles = db['profiles']
