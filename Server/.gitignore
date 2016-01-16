@@ -7,7 +7,7 @@ __pycache__/
 *.iml
 # C extensions
 *.so
-
+api_config
 # Distribution / packaging
 .Python
 env/

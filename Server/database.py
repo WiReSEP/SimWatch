@@ -4,6 +4,7 @@ from pymongo import MongoClient
 import datetime, instance
 from log import logger
 from bson.objectid import ObjectId
+import confighandler
 
 NAME = 'name'
 PROFILE = 'profile'
@@ -13,7 +14,8 @@ ID = '_id'
 
 
 class DataBase:
-    client = MongoClient()
+    confighandler = confighandler.ApiConfig()
+    client = MongoClient(host=confighandler.mongo_host, port=confighandler.port)
     db = client['test_database']
     instances = db['instances']
     profiles = db['profiles']
