@@ -17,8 +17,8 @@ _JSON_MIME = 'application/json'
 
 @_app.route('/instances', methods=['POST'])
 def post_instance():
-    logger.debug('post_instance with following json: ' + request.get_json())
-    instancee = Instance(jsons=request.get_json())
+    logger.debug('post_instance with following json: ' + str(request.get_json()))
+    instancee = Instance(dict=request.get_json())
     _db.insert_instance(instancee)
     return Response(instancee.json_instance, mimetype=_JSON_MIME)
 

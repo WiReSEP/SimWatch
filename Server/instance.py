@@ -11,17 +11,18 @@ PROFILE_ID = 'profile_id'
 
 
 class Instance():
-    def __init__(self, jsons=None, id=None):
+    def __init__(self, dict=None, id=None):
         self.db = database.DataBase()
-        if jsons is None:
+        if dict is None:
             self.dict_instance = self.db.get_instance(id)
+
             self.id = id
             if self.dict_instance is None:
                 logger.info('dict_instance is None!')
             else:
                 logger.info('created instance from id! Name: ' + str(self.dict_instance[NAME]))
         else:
-            self.dict_instance = json.loads(jsons)
+            self.dict_instance = dict
             logger.info('assessing profile id...')
             profile_dict = self.db.get_profile(profile=self.dict_instance[PROFILE])
             if profile_dict is None:
@@ -42,10 +43,10 @@ class Instance():
         dict_update = json.loads(update)
         dict_update[DATE] = datetime.datetime.now()
         if self.dict_instance is not None:
-
+            logger.debug('Update to insert: ' + str(update))
             logger.debug('Updates before updating: ' + str(self.dict_instance[UPDATES]))
             current_updates = self.dict_instance[UPDATES]
-            current_updates.append(update)
+            current_updates.append(dict_update)
             self.dict_instance[UPDATES] = current_updates
             logger.debug('Updates after updating: ' + str(self.dict_instance[UPDATES]))
             logger.debug('Update needs to be saved now!')
