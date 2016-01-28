@@ -4,13 +4,13 @@ import com.sun.istack.internal.NotNull;
 
 import java.util.Arrays;
 
-public class Vector {
+public final class Vector {
     private int length;
     private double[] data;
 
-    public Vector(@NotNull Number[] data) {
+    public Vector(@NotNull Number... data) {
         if (data == null || data.length == 0) {
-            throw new IllegalArgumentException("Matrix data must be at least 1x1 and not null");
+            throw new IllegalArgumentException("Vector data must not be empty or null");
         }
         this.length = data.length;
         this.data = new double[length];

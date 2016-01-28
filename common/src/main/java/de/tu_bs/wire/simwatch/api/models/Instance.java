@@ -9,17 +9,21 @@ import java.util.List;
 
 public class Instance {
     @SerializedName("_id")
-    private final String ID;
-    private final String name;
+    private String ID;
+    private String name;
     @SerializedName("profile_id")
-    private final String profileID;
-    @SerializedName("profile")
-    private JsonObject profile;
+    private String profileID;
+    private Profile profile;
 
     /**
      * List of all known updates in chronological order
      */
     private List<Update> updates;
+
+    public Instance(String name, Profile profile) {
+        this.name = name;
+        this.profile = profile;
+    }
 
     public Instance(JsonObject data, String ID, String name, String profileID) {
         updates = new ArrayList<>();
@@ -99,9 +103,5 @@ public class Instance {
         } else {
             return false;
         }
-    }
-
-    public void setProfile(JsonObject profile) {
-        this.profile = profile;
     }
 }
