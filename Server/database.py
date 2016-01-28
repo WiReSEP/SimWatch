@@ -15,7 +15,7 @@ ID = '_id'
 class DataBase:
     confighandler = confighandler.ApiConfig()
     client = MongoClient(host=confighandler.mongo_host, port=confighandler.mongo_port)
-    db = client['test_database']
+    db = client[confighandler.mongo_name]
     instances = db['instances']
     profiles = db['profiles']
     logger.info('initiated database')
@@ -44,6 +44,10 @@ class DataBase:
         logger.info('getting instance: ' + id)
         return self.instances.find_one({ID: ObjectId(id)})
 
+    def get_all_instance_ids(self):
+        logger.info('getting all instance ids...')
+        return self.instances.find({}, {ID: 1})
+
     def insert_profile(self, profile):
         logger.info('inserting profile: ' + str(profile))
         profilee = {PROFILE: profile}
@@ -60,11 +64,4 @@ class DataBase:
         else:
             logger.info('getting profle: ' + str(profile))
             return self.profiles.find_one({PROFILE: profile})
-            # todo für markus: instance by id, von einer instanz alle updates ab datum, profil by id, alle instanzen id ausgabe
-
-
-"""b = DataBase()
-cursor = db.get_all_instances()
-for object in cursor:
-        print(str(object))
-        print(str(object[ID]))"""
+            # todo für markus: von einer instanz alle updates ab datum

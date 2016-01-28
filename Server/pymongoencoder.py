@@ -2,7 +2,6 @@ __author__ = 'steffen'
 
 import json
 from bson.objectid import ObjectId
-
 from datetime import datetime
 
 
