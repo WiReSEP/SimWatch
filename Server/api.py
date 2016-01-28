@@ -3,8 +3,10 @@ from flask import Flask, request, Response
 import database, instance
 from log import logger
 from bson import json_util
+import json
 from confighandler import ApiConfig
 from instance import Instance
+from pymongoencoder import PyMongoEncoder
 
 _FLASK_NAME = 'flask_import_name'
 _app = Flask(_FLASK_NAME)
@@ -27,7 +29,7 @@ def post_instance():
 def send_update(instance_id):
     logger.debug('posting update: ' + json_util.dumps(request.get_json()))
     instancee = Instance(id=instance_id)
-    instancee.update(json_util.dumps(request.get_json()))
+    instancee.update(json.dumps(request.get_json()))
     _db.update_instance(instancee)
     return Response(instancee.json_instance, mimetype=_JSON_MIME)
 
@@ -35,7 +37,16 @@ def send_update(instance_id):
 @_app.route('/get_instances', methods=['GET'])
 def get_instances():
     logger.info('getting all instances...')
-    return Response(_db.get_all_instances()).data
+    cursor = _db.get_all_instances()
+    json = cursor_to_json(cursor)
+    return Response(json, mimetype=_JSON_MIME)
+
+
+def cursor_to_json(cursor):
+    decoder = PyMongoEncoder()
+
+    return json.dumps(cursor, cls=decoder)
+
 
 
 config = ApiConfig()

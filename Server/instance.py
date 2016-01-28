@@ -2,6 +2,7 @@
 import json, logging, datetime, database
 from log import logger
 from bson import json_util
+from pymongoencoder import PyMongoEncoder
 
 PROFILE = 'profile'
 NAME = 'name'
@@ -37,7 +38,7 @@ class Instance():
             self.dict_instance[PROFILE_ID] = profile_id
             logger.info('created instance...')
             logger.info(NAME + ": " + self.dict_instance[NAME])
-            logger.info(PROFILE + ": " + self.dict_instance[PROFILE])
+            logger.info(PROFILE + ": " + str(self.dict_instance[PROFILE]))
 
     def update(self, update):
         dict_update = json.loads(update)
@@ -55,4 +56,4 @@ class Instance():
 
     @property
     def json_instance(self):
-        return json.dumps(self.dict_instance, default=json_util.default)
+        return json.dumps(self.dict_instance, cls=PyMongoEncoder)

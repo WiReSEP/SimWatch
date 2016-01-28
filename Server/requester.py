@@ -11,7 +11,7 @@ class Requester:
     _GET_URL = 'http://127.0.0.1:5000/get_instances'
     _instance = {}
     _instance['name'] = 'instance_name112777'
-    _instance['profile'] = 'instance_profile4'
+    _instance['profile'] = {"profilekey: ": "profilevalue"}
     _update = {
         "Herausgeber": "Xema",
         "Nummer": "1234-5678-9012-3456",
@@ -30,15 +30,12 @@ class Requester:
     def post_instance(self):
         logger.info('Posting to: ' + self._POST_INSTANCE_URL)
         response = requests.post(self._POST_INSTANCE_URL, json=self._instance).json()
-        tempjson = json_util.dumps(response)
-        formatted_response = json_util.loads(tempjson)
-        logger.info('response: {}'.format(formatted_response))
-        return formatted_response
+        logger.info('response: {}'.format(response))
+        return response
 
     def get_it(self):
-        instances = requests.get(self._GET_URL)._content
-        for instance in instances:
-            print(instance)
+        instances = requests.get(self._GET_URL).content
+        logger.info(instances)
 
     def post_update(self, url):
         logger.info('Posting to: ' + url)
@@ -52,7 +49,6 @@ class Requester:
         logger.info('execute test')
         response = self.post_instance()
         id = response["_id"]
-        logger.info("ID: {}".format(str(id)))
         url = '{}{}{}'.format('http://127.0.0.1:5000/instances/', id, '/updates')
         self.post_update(url)
 
@@ -62,3 +58,4 @@ class Requester:
 
 requester = Requester()
 requester.test_istance_update()
+# requester.get_it()

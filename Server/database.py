@@ -45,7 +45,7 @@ class DataBase:
         return self.instances.find_one({ID: ObjectId(id)})
 
     def insert_profile(self, profile):
-        logger.info('inserting profile: ' + profile)
+        logger.info('inserting profile: ' + str(profile))
         profilee = {PROFILE: profile}
         return self.profiles.insert_one(profilee).inserted_id
 
@@ -58,7 +58,7 @@ class DataBase:
             logger.info('getting profile: ' + str(id))
             return self.profiles.find_one({ID: ObjectId(id)})
         else:
-            logger.info('getting profle: ' + profile)
+            logger.info('getting profle: ' + str(profile))
             return self.profiles.find_one({PROFILE: profile})
             # todo für markus: instance by id, von einer instanz alle updates ab datum, profil by id, alle instanzen id ausgabe
 
