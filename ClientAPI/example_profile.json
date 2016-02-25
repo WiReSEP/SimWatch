@@ -1,0 +1,8 @@
+{
+  "name": "Example Simulation",
+  "properties": {
+    "finished": "boolean",
+    "progress": "number",
+    "numbers": ["number"]
+  }
+}
