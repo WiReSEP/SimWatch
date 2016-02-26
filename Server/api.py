@@ -6,6 +6,7 @@ from bson import json_util
 import json
 from confighandler import ApiConfig
 from instance import Instance
+from attachment import Attachment
 from pymongoencoder import PyMongoEncoder
 from dateutil import parser
 
@@ -33,6 +34,14 @@ def send_update(instance_id):
     instancee.update(json.dumps(request.get_json()))
     _db.update_instance(instancee)
     return Response(instancee.json_instance, mimetype=_JSON_MIME)
+
+
+@_app.route('/instance/<instance_id>/attach/<property_name>', methods=['POST'])
+def upload_attachment(instance_id, property_name):
+    logger.debug('receiving attachement \'' + property_name + '\' for instance ' + instance_id)
+    attachment = Attachment(instance_id, property_name, request)
+    attachment.save()
+    return Response(attachment.json_status, mimetype=_JSON_MIME)
 
 
 @_app.route('/instance', methods=['GET'])
