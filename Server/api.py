@@ -17,6 +17,7 @@ PROFILE = 'profile'
 UPDATES = 'updates'
 _db = database.DataBase()
 _JSON_MIME = 'application/json'
+_BINARY_MIME = 'application/octet-stream'
 
 
 @_app.route('/instance', methods=['POST'])
@@ -36,12 +37,26 @@ def send_update(instance_id):
     return Response(instancee.json_instance, mimetype=_JSON_MIME)
 
 
-@_app.route('/instance/<instance_id>/attach/<property_name>', methods=['POST'])
+@_app.route('/instance/<instance_id>/attachment/<property_name>', methods=['POST'])
 def upload_attachment(instance_id, property_name):
     logger.debug('receiving attachement \'' + property_name + '\' for instance ' + instance_id)
     attachment = Attachment(instance_id, property_name, request)
-    attachment.save()
-    return Response(attachment.json_status, mimetype=_JSON_MIME)
+    if attachment.save():
+        status = 200
+    else:
+        status = 400
+    return Response(attachment.json_status, mimetype=_JSON_MIME, status=status)
+
+
+@_app.route('/instance/<instance_id>/attachment/<property_name>', methods=['GET'])
+def load_attachment(instance_id, property_name):
+    logger.debug('serving attachement \'' + property_name + '\' for instance ' + instance_id)
+    attachment = Attachment(instance_id, property_name, request)
+    generator = attachment.load()
+    if generator is not None:
+        return Response(generator(), mimetype=_BINARY_MIME, status=200)
+    else:
+        return Response(attachment.json_status, mimetype=_JSON_MIME, status=404)
 
 
 @_app.route('/instance', methods=['GET'])
@@ -98,8 +113,6 @@ def cursor_to_list(cursor):
     for doc in cursor:
         list.append(doc)
     return list
-
-
 
 
 config = ApiConfig()

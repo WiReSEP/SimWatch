@@ -5,7 +5,7 @@ from log import logger
 
 ATTACHMENT_DIRECTORY = './attachments'
 INSTANCE_ID_FORMAT = r'^[0-9a-f]+$'
-PROPERTY_NAME_FORMAT = r'^[\w_. ]+$'
+PROPERTY_NAME_FORMAT = r'^[\w_.]+$'
 BUFFER_SIZE = 4096
 
 
@@ -62,14 +62,44 @@ class Attachment():
         with open(sim_dir + '/' + self.property_name, 'bw') as file:
             fcntl.lockf(file, fcntl.LOCK_EX)
             while True:
-                buffer = self.request.stream.read(BUFFER_SIZE)
-                if len(buffer) == 0:
+                chunk = self.request.stream.read(BUFFER_SIZE)
+                if not chunk:
                     break
-                file.write(buffer)
-            self.request.stream.read()
+                file.write(chunk)
             fcntl.lockf(file, fcntl.LOCK_UN)
         self.status['success'] = True
         return True
+
+    def load(self):
+        """
+        Load the attachment.
+
+        Make sure the request is valid and the file exists
+        Open and lock the file.
+        Let Flask serve the file in chunks.
+        Unlock and close the file.
+
+        :return: generator that yields the binary file if successful, else None
+        """
+        if not self.is_valid():
+            return None
+        file_path = ATTACHMENT_DIRECTORY + '/' + self.instance_id + '/' + self.property_name
+        if not os.path.exists(file_path):
+            logger.info('Attachment file does not exist')
+            self.status['messages'].append('Attachment file does not exist')
+            return None
+        f =  open(file_path, 'br')
+        fcntl.lockf(f, fcntl.LOCK_SH)
+        def generate():
+            while True:
+                chunk = f.read(BUFFER_SIZE)
+                if not chunk:
+                    break
+                yield chunk
+            fcntl.lockf(f, fcntl.LOCK_UN)
+            f.close()
+        self.status['success'] = True
+        return generate
 
     @property
     def json_status(self):

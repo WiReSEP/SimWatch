@@ -11,7 +11,7 @@ import random
 class Requester:
     _POST_INSTANCE_URL = 'http://127.0.0.1:5000/instance'
     _GET_URL = 'http://127.0.0.1:5000/instance'
-    _ATTACH_URL = 'http://127.0.0.1:5000/instance/{}/attach/{}'
+    _ATTACHMENT_URL = 'http://127.0.0.1:5000/instance/{}/attachment/{}'
     _instance = {}
     _GET_INSTANCE_URL = None
     _instance['name'] = 'instance_name112777'
@@ -71,10 +71,15 @@ class Requester:
 
     def post_attachment(self, id):
         testfile = open('./testfile', 'br')
-        response = requests.post(self._ATTACH_URL.format(id, 'testfile'), data=testfile).json()
+        response = requests.post(self._ATTACHMENT_URL.format(id, 'testfile'), data=testfile).json()
         testfile.close()
         logger.info(str(response))
         return response
+
+    def get_attachment(self, id):
+        status = requests.get(self._ATTACHMENT_URL.format(id, 'testfile')).status_code
+        logger.info('status code: ' + str(status))
+        return status
 
     def test_api(self):
         logger.info('execute test')
@@ -96,6 +101,8 @@ class Requester:
         self.get_update_from_instance_since_date(random.choice(id_list))
         logger.info('now uploading testfile')
         self.post_attachment(id)
+        logger.info('now downloading testfile')
+        self.get_attachment(id)
 
     def create_url(self, stringlist):
         url = ''
