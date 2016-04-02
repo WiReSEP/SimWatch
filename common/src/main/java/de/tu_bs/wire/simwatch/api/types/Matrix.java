@@ -2,7 +2,7 @@ package de.tu_bs.wire.simwatch.api.types;
 
 import java.util.Arrays;
 
-public class Matrix {
+public final class Matrix {
     private int width, height;
     private double[][] data;
 
