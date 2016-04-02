@@ -57,6 +57,13 @@ class DataBase:
         logger.info('getting all profiles...')
         return self.instances.find({})
 
+    def delete_instance(self, dict_id):
+        id = dict_id["ID"]
+        logger.info('deleting instance: '+ id)
+        response = self.instances.delete_one(dict_id)
+        logger.info('response: ' + str(response))
+        return 'instance {} deleted'.format(id)
+
     def get_profile(self, id=None, profile=None):
         if id is not None:
             logger.info('getting profile: ' + str(id))

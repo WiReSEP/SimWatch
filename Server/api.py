@@ -16,6 +16,7 @@ PROFILE = 'profile'
 UPDATES = 'updates'
 _db = database.DataBase()
 _JSON_MIME = 'application/json'
+_TEXT_MIME = 'text/xml'
 
 
 @_app.route('/instance', methods=['POST'])
@@ -24,6 +25,13 @@ def post_instance():
     instancee = Instance(dict=request.get_json())
     _db.insert_instance(instancee)
     return Response(instancee.json_instance, mimetype=_JSON_MIME)
+
+
+@_app.route('/instance/delete', methods=['POST'])
+def delete_instance():
+    id = request.get_json()
+    logger.debug('deleting instance with id: ' + id["ID"])
+    return Response(_db.delete_instance(id), mimetype=_TEXT_MIME)
 
 
 @_app.route('/instance/<instance_id>/updates', methods=['POST'])
@@ -89,8 +97,6 @@ def cursor_to_list(cursor):
     for doc in cursor:
         list.append(doc)
     return list
-
-
 
 
 config = ApiConfig()

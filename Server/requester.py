@@ -7,12 +7,10 @@ import datetime
 import random
 
 
-
 class Requester:
     _POST_INSTANCE_URL = 'http://127.0.0.1:5000/instance'
     _GET_URL = 'http://127.0.0.1:5000/instance'
     _instance = {}
-    _GET_INSTANCE_URL = None
     _instance['name'] = 'instance_name112777'
     _instance['profile'] = {"profilekey: ": "profilevalue"}
     _update = {
@@ -41,6 +39,13 @@ class Requester:
         response = requests.get(self._GET_URL).json()
         logger.info(str(response))
 
+    def delete_instance(self, id):
+        logger.info('Deleting instance: ' + id)
+        url = self.create_url([self._POST_INSTANCE_URL, '/delete'])
+        json = {'ID': id}
+        response = requests.post(url, json=json).text
+        logger.info('response: {}'.format(response))
+        return response
 
     def post_update(self, url):
         logger.info('Posting update to: ' + url)
@@ -70,7 +75,6 @@ class Requester:
 
     def test_api(self):
         logger.info('execute test')
-        logger.info('getting every instance...')
         self.get_every_instance()
         logger.info('posting instance...')
         response = self.post_instance()
@@ -86,6 +90,12 @@ class Requester:
         id_list = self.get_instances_id()
         logger.info('now getting every update from random instance since yesterday')
         self.get_update_from_instance_since_date(random.choice(id_list))
+        self.delete_instance(id)
+        logger.info('getting all instances again to ensure that instance was deleted')
+        self.get_every_instance()
+        logger.info('adding another instance to fill db')
+        self.post_instance()
+        logger.info('test executed successfully')
 
     def create_url(self, stringlist):
         url = ''
