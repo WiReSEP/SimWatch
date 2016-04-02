@@ -9,6 +9,7 @@ NAME = 'name'
 DATE = 'date'
 UPDATES = 'updates'
 PROFILE_ID = 'profile_id'
+UPDATE_ID = 'update_id'
 
 
 class Instance():
@@ -40,12 +41,15 @@ class Instance():
             logger.info(NAME + ": " + self.dict_instance[NAME])
             logger.info(PROFILE + ": " + str(self.dict_instance[PROFILE]))
 
+
     def update(self, update):
         dict_update = json.loads(update)
         dict_update[DATE] = datetime.datetime.now()
+        dict_update[UPDATE_ID] = (len(self.dict_instance[UPDATES]) +1)
         if self.dict_instance is not None:
             logger.debug('Update to insert: ' + str(update))
             logger.debug('Updates before updating: ' + str(self.dict_instance[UPDATES]))
+
             current_updates = self.dict_instance[UPDATES]
             current_updates.append(dict_update)
             self.dict_instance[UPDATES] = current_updates

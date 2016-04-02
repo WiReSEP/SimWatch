@@ -19,8 +19,8 @@ class DataBase:
     instances = db['instances']
     profiles = db['profiles']
     logger.info('initiated database')
-    # instances.delete_many({})
-    # profiles.delete_many({})
+    #instances.delete_many({})
+    #profiles.delete_many({})
 
     def insert_instance(self, instancee):
         self.instances.insert_one(instancee.dict_instance)

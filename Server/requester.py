@@ -98,6 +98,9 @@ class Requester:
         profile_id = response["profile_id"]
         url = self.create_url(['http://127.0.0.1:5000/instance/', id, '/updates'])
         self.post_update(url)
+        logger.info('now posting another update on the same instance')
+        self.post_update(url)
+
         logger.info('now getting this instance by id...')
         self.get_instance_by_id(id)
         logger.info('now getting profile by id...')
