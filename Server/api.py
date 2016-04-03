@@ -36,6 +36,15 @@ def delete_instance():
     return Response(_db.delete_instance(id), mimetype=_TEXT_MIME)
 
 
+@_app.route('/instance/<instance_id>/updates/<update_id>', methods=['GET'])
+def get_latest_updates(instance_id, update_id):
+    logger.info('getting latest updates since update ' + update_id)
+    instancee = Instance(id=instance_id)
+    updates = to_json(instancee.get_latest_updates(update_id))
+    logger.info('returning updates: ' + str(updates))
+    return Response(updates, mimetype=_JSON_MIME)
+
+
 @_app.route('/instance/<instance_id>/updates', methods=['POST'])
 def send_update(instance_id):
     logger.debug('posting update: ' + json_util.dumps(request.get_json()))
@@ -121,8 +130,6 @@ def cursor_to_list(cursor):
     for doc in cursor:
         list.append(doc)
     return list
-
-
 
 
 config = ApiConfig()

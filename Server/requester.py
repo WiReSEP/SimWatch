@@ -66,6 +66,12 @@ class Requester:
         response = requests.get(self.create_url(['http://127.0.0.1:5000/profile/', id])).json()
         logger.info(str(response))
 
+    def get_update_since_id(self, instance_id):
+        list = [self._GET_URL,'/', instance_id, '/updates/',1]
+        url = self.create_url(list)
+        response = requests.get(url).json()
+        logger.info(str(response))
+
     def get_instances_id(self):
         response = requests.get('http://127.0.0.1:5000/instance/ids').json()
         logger.info(str(response))
@@ -98,7 +104,8 @@ class Requester:
         profile_id = response["profile_id"]
         url = self.create_url(['http://127.0.0.1:5000/instance/', id, '/updates'])
         self.post_update(url)
-        logger.info('now posting another update on the same instance')
+        logger.info('now posting another two update on the same instance')
+        self.post_update(url)
         self.post_update(url)
 
         logger.info('now getting this instance by id...')
@@ -109,6 +116,8 @@ class Requester:
         id_list = self.get_instances_id()
         logger.info('now getting every update from random instance since yesterday')
         self.get_update_from_instance_since_date(random.choice(id_list))
+        logger.info('now getting every update newer than update 1')
+        self.get_update_since_id(id)
         logger.info('now uploading testfile')
         self.post_attachment(id)
         logger.info('now downloading testfile')
@@ -123,7 +132,7 @@ class Requester:
     def create_url(self, stringlist):
         url = ''
         for string in stringlist:
-            url += string
+            url += str(string)
 
         return url
 

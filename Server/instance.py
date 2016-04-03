@@ -45,7 +45,7 @@ class Instance():
     def update(self, update):
         dict_update = json.loads(update)
         dict_update[DATE] = datetime.datetime.now()
-        dict_update[UPDATE_ID] = (len(self.dict_instance[UPDATES]) +1)
+        dict_update[UPDATE_ID] = (len(self.dict_instance[UPDATES]) + 1)
         if self.dict_instance is not None:
             logger.debug('Update to insert: ' + str(update))
             logger.debug('Updates before updating: ' + str(self.dict_instance[UPDATES]))
@@ -57,6 +57,17 @@ class Instance():
             logger.debug('Update needs to be saved now!')
         else:
             logger.debug('dict_instance is None!')
+
+    def get_latest_updates(self, id):
+        logger.debug('getting updates since update: ' + id)
+        updates = self.dict_instance[UPDATES]
+        logger.debug('id ' + id)
+        latest_updates = []
+        for i, update in enumerate(updates):
+            if i > int(id):
+                latest_updates.append(updates[int(id)])
+        logger.debug('returning following updates: ' + str(latest_updates))
+        return latest_updates
 
     @property
     def json_instance(self):
