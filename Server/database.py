@@ -58,7 +58,7 @@ class DataBase:
         return self.instances.find({})
 
     def delete_instance(self, dict_id):
-        id = dict_id["ID"]
+        id = dict_id["_id"]
         logger.info('deleting instance: '+ id)
         response = self.instances.delete_one(dict_id)
         logger.info('response: ' + str(response))

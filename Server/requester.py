@@ -45,7 +45,7 @@ class Requester:
     def delete_instance(self, id):
         logger.info('Deleting instance: ' + id)
         url = self.create_url([self._POST_INSTANCE_URL, '/delete'])
-        json = {'ID': id}
+        json = {'_id': id}
         response = requests.post(url, json=json).text
         logger.info('response: {}'.format(response))
         return response
@@ -116,7 +116,10 @@ class Requester:
         id_list = self.get_instances_id()
         logger.info('now getting every update from random instance since yesterday')
         self.get_update_from_instance_since_date(random.choice(id_list))
-        logger.info('now getting every update newer than update 1')
+        logger.info('now adding an update to random instance')
+        url = self.create_url(['http://127.0.0.1:5000/instance/', random.choice(id_list), '/updates'])
+        self.post_update(url)
+        logger.info('now getting every update newer than update 1 from gotten instance by id')
         self.get_update_since_id(id)
         logger.info('now uploading testfile')
         self.post_attachment(id)

@@ -32,7 +32,7 @@ def post_instance():
 @_app.route('/instance/delete', methods=['POST'])
 def delete_instance():
     id = request.get_json()
-    logger.debug('deleting instance with id: ' + id["ID"])
+    logger.debug('deleting instance with id: ' + id["_id"])
     return Response(_db.delete_instance(id), mimetype=_TEXT_MIME)
 
 
@@ -117,8 +117,8 @@ def get_instance(id):
 def get_profile(id):
     logger.info('getting profile: ' + id)
     cursor = _db.get_profile(id)
-    profile = cursor['profile']
-    return Response(to_json(profile), mimetype=_JSON_MIME)
+    #profile = cursor['profile']
+    return Response(to_json(cursor), mimetype=_JSON_MIME)
 
 
 def to_json(obj):
