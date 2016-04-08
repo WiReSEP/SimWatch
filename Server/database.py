@@ -50,8 +50,8 @@ class DataBase:
 
     def insert_profile(self, profile):
         logger.info('inserting profile: ' + str(profile))
-        profilee = {PROFILE: profile}
-        return self.profiles.insert_one(profilee).inserted_id
+
+        return self.profiles.insert_one(profile).inserted_id
 
     def get_all_profiles(self):
         logger.info('getting all profiles...')
