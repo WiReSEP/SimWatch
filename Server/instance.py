@@ -64,8 +64,9 @@ class Instance():
         logger.debug('id ' + id)
         latest_updates = []
         for i, update in enumerate(updates):
-            if i > int(id):
-                latest_updates.append(updates[int(id)])
+            logger.debug("i: " + str(i))
+            if i > int(id) - 1:
+                latest_updates.append(updates[i])
         logger.debug('returning following updates: ' + str(latest_updates))
         return latest_updates
 
