@@ -19,12 +19,13 @@ class DataBase:
     instances = db['instances']
     profiles = db['profiles']
     logger.info('initiated database')
-    #instances.delete_many({})
+    instances.delete_many({})
     #profiles.delete_many({})
 
     def insert_instance(self, instancee):
         self.instances.insert_one(instancee.dict_instance)
         logger.info(ID + ": " + str(instancee.dict_instance[ID]))
+
         return instancee
 
     def update_instance(self, instancee):
@@ -57,9 +58,11 @@ class DataBase:
         logger.info('getting all profiles...')
         return self.instances.find({})
 
-    def delete_instance(self, dict_id):
-        id = dict_id["_id"]
+    def delete_instance(self, id):
+
         logger.info('deleting instance: '+ id)
+        obj_id = ObjectId(id)
+        dict_id = {"_id" : obj_id}
         response = self.instances.delete_one(dict_id)
         logger.info('response: ' + str(response))
         return 'instance {} deleted'.format(id)

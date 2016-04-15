@@ -31,8 +31,10 @@ def post_instance():
 
 @_app.route('/instance/delete', methods=['POST'])
 def delete_instance():
-    id = request.get_json()
-    logger.debug('deleting instance with id: ' + id["_id"])
+    dict_id = request.get_json()
+    id = dict_id["_id"]
+
+    logger.debug('deleting instance with id: ' + id)
     return Response(_db.delete_instance(id), mimetype=_TEXT_MIME)
 
 

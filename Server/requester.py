@@ -48,6 +48,8 @@ class Requester:
         json = {'_id': id}
         response = requests.post(url, json=json).text
         logger.info('response: {}'.format(response))
+        response = self.get_instance_by_id(id)
+        logger.info('response : {}'.format(response))
         return response
 
     def post_update(self, url):
