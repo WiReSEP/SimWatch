@@ -1,0 +1,10 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:defaultValue="wifi"
+        android:entries="@array/autoUpdateEntries"
+        android:entryValues="@array/autoUpdateValues"
+        android:key="autoUpdateWhen"
+        android:title="@string/updateSimulations"/>
+
+</PreferenceScreen>

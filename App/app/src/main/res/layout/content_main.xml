@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
+    android:id="@+id/mainContent"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -10,11 +11,30 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".MainActivity"
+    tools:context=".ui.activities.MainActivity"
     tools:showIn="@layout/app_bar_main">
 
-    <TextView
+    <!-- This reload button is out of order another reload button exists in the navigation drawer. Change the visibility of this view to have one in the main content, too
+        -->
+    <ImageButton
+        android:id="@+id/updateImgMain"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"/>
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:contentDescription="@string/reload"
+        android:src="@drawable/ic_update_black_48dp"
+        android:visibility="gone"/>
+
+    <FrameLayout
+        android:id="@+id/snapshot_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true">
+    </FrameLayout>
+
+
 </RelativeLayout>
