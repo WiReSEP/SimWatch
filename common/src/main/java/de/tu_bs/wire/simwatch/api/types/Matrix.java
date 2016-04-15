@@ -26,6 +26,11 @@ public final class Matrix {
         }
     }
 
+    @Override
+    public String toString() {
+        return Arrays.toString(data);
+    }
+
     public double get(int x, int y) {
         if (x < 0 || y < 0 || x >= width || y >= height)
             throw new IndexOutOfBoundsException();

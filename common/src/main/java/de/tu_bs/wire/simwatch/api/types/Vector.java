@@ -1,14 +1,12 @@
 package de.tu_bs.wire.simwatch.api.types;
 
-import com.sun.istack.internal.NotNull;
-
 import java.util.Arrays;
 
 public final class Vector {
     private int length;
     private double[] data;
 
-    public Vector(@NotNull Number... data) {
+    public Vector(Number... data) {
         if (data == null || data.length == 0) {
             throw new IllegalArgumentException("Vector data must not be empty or null");
         }

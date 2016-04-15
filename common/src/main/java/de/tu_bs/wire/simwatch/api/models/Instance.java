@@ -1,7 +1,6 @@
 package de.tu_bs.wire.simwatch.api.models;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
@@ -23,16 +22,17 @@ public class Instance {
     public Instance(String name, Profile profile) {
         this.name = name;
         this.profile = profile;
+        //fixme inconsistent initialization; ID? profileID?
     }
 
-    public Instance(JsonObject data, String ID, String name, String profileID) {
+    public Instance(String ID, String name, String profileID) {
         updates = new ArrayList<>();
         this.ID = ID;
         this.name = name;
         this.profileID = profileID;
     }
 
-    public Instance(JsonObject data, List<Update> updates, String ID, String name, String profileID) {
+    public Instance(List<Update> updates, String ID, String name, String profileID) {
         this.updates = new ArrayList<>(updates);
         this.ID = ID;
         this.name = name;
@@ -57,7 +57,7 @@ public class Instance {
      * @return current Snapshot
      */
     public Snapshot getSnapshot() {
-        return getSnapshot(updates.size());
+        return getSnapshot(getNumberOfUpdates());
     }
 
     /**
@@ -68,11 +68,11 @@ public class Instance {
      * @return Snapshot after i-th update
      */
     public Snapshot getSnapshot(int i) {
-        Snapshot snapshot = new Snapshot(profileID);
-        for (int j = updates.size() - 1; j >= 0; j++) {
-            snapshot.addData(updates.get(j).getData());
+        Snapshot snapshot = new Snapshot(name, profileID);
+        for (int j = 0; j < i && j < getNumberOfUpdates(); j++) {
+            snapshot.addUpdate(updates.get(j));
         }
-        return null;
+        return snapshot;
     }
 
     /**
@@ -93,10 +93,32 @@ public class Instance {
     }
 
     public int getNumberOfUpdates() {
-        return updates.size();
+        if (updates == null) {
+            return 0;
+        } else {
+            return updates.size();
+        }
+    }
+
+    public String getProfileID() {
+        return profileID;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Instance)) return false;
+
+        Instance instance = (Instance) o;
+
+        return ID != null ? ID.equals(instance.ID) : instance.ID == null;
+
     }
 
     public boolean add(Update u) {
+        if (updates == null) {
+            updates = new ArrayList<>();
+        }
         if (!updates.contains(u)) {
             updates.add(u);
             return true;
@@ -104,4 +126,17 @@ public class Instance {
             return false;
         }
     }
+
+    public Profile getProfile() {
+        return profile;
+    }
+
+    public List<Update> getUpdates() {
+        if (updates == null) {
+            return new ArrayList<>();
+        } else {
+            return updates;
+        }
+    }
+
 }
