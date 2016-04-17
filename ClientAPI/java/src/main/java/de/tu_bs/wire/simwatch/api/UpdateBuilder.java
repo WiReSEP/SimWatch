@@ -21,32 +21,29 @@ import java.util.Map;
  * chainable.
  * <p>
  * Example:
- * <pre>
- * {@code
- * api.buildUpdate()
+ * <pre><code>
+ * client.buildUpdate()
  *   .put("finished", false)
- *   .put("iteration", i)
- *   .put("progress", (i + 1) / (double) SIZE)
+ *   .put("iteration", 4654)
+ *   .put("progress", 0.4)
  *   .attach("render", new AttachmentStreamer() {
- *      @Override
+ *     {@literal @}Override
  *      public void writeTo(OutputStream outputStream) throws IOException {
  *          ImageIO.write(image, "png", outputStream);
  *      }
  *   })
  *   .post();
- *  }
- * </pre>
- * </p>
+ * </code></pre>
  */
 @SuppressWarnings("WeakerAccess") /* api methods must be public  */
 public final class UpdateBuilder {
     private static final Gson gson = new Gson();
     private static final MediaType BINARY_MEDIA_TYPE = MediaType.parse("application/octet-stream");
-    private ApiConnector connector;
+    private SimWatchClient connector;
     private JsonObject data;
     private Map<String, RequestBody> attachments;
 
-    /*package*/ UpdateBuilder(ApiConnector connector) {
+    /*package*/ UpdateBuilder(SimWatchClient connector) {
         this.connector = connector;
         this.data = new JsonObject();
         this.attachments = new HashMap<>();

@@ -24,27 +24,39 @@ import java.util.logging.Logger;
 /**
  * Main entry point to access the SimWatch update API.
  * <p>
- * You can use the instance returned by {@link ApiConnector#getInstance()} to register a simulation via
- * {@link ApiConnector#register(java.lang.String, java.io.File)}. A simulation can send updates after
- * registering by calling {@link ApiConnector#buildUpdate()} (See {@link UpdateBuilder}).
+ * You can use {@link SimWatchClient#registerSimulation(String, File)} to register a simulation.
+ * A simulation can send updates after registering by calling {@link SimWatchClient#buildUpdate()}
+ * on the returned client instance.
+ *
+ * @see UpdateBuilder
  */
 @SuppressWarnings("WeakerAccess") // intentionally contains public api methods
-public class ApiConnector {
-    private static final Logger LOG = Logger.getLogger(ApiConnector.class.getName());
-    private static ApiConnector instance;
+public class SimWatchClient {
+    private static final Logger LOG = Logger.getLogger(SimWatchClient.class.getName());
     private final BackendService backendService;
     private Instance simInstance;
 
-    // todo: this should register an instance and return different instances of the connector
-    // todo the backend ip must be configurable
-    public static ApiConnector getInstance() {
-        if (instance == null) {
-            instance = new ApiConnector("http://localhost:5000/");
-        }
+
+    /**
+     * Register a simulation.
+     * <p>
+     * This method returns a client that can be used to send updates.
+     *
+     * @param name        Name of the simulation, displayed in the app
+     * @param profileFile File that contains the simulation profile (JSON)
+     * @return A client that can be used to send updates from the simulation
+     * @throws RegistrationException if there was an error (e.g. connection issues)
+     * @see SimWatchClient#buildUpdate()
+     */
+    public static SimWatchClient registerSimulation(String name, File profileFile)
+            throws RegistrationException {
+        // todo the backend ip must be configurable
+        SimWatchClient instance = new SimWatchClient("http://localhost:5000/");
+        instance.register(name, profileFile);
         return instance;
     }
 
-    private ApiConnector(String baseUrl) {
+    private SimWatchClient(String baseUrl) {
         OkHttpClient client = new OkHttpClient();
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
@@ -59,13 +71,13 @@ public class ApiConnector {
     }
 
     /**
-     * Register a new simulation,
+     * Register a new simulation
      *
      * @param name        Name of the simulation, displayed in the app
      * @param profileFile File that contains the simulation profile
-     * @throws RegistrationException
+     * @throws RegistrationException if there was an error (e.g. connection issues)
      */
-    public void register(String name, File profileFile) throws RegistrationException {
+    private void register(String name, File profileFile) throws RegistrationException {
         try {
             InputStreamReader jsonReader = new FileReader(profileFile);
             Profile profile = new Gson().fromJson(jsonReader, Profile.class);
@@ -102,7 +114,7 @@ public class ApiConnector {
      */
     /*package*/ boolean update(Update update, Map<String, RequestBody> attachments) {
         if (simInstance == null) {
-            throw new IllegalStateException("Must register first");
+            throw new IllegalStateException("Not registered");
         }
         try {
             Response response = backendService.update(simInstance.getID(), update).execute();
