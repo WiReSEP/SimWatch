@@ -1,8 +1,11 @@
 {
   "name": "Example Simulation",
   "properties": {
+    "iteration": "plotreference",
+    "result": "plottable",
     "finished": "boolean",
     "progress": "number",
-    "numbers": ["number"]
+    "numbers": "vector",
+    "render": "binary:image/png"
   }
 }

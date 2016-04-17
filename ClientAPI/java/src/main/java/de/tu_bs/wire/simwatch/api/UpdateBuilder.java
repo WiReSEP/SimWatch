@@ -9,11 +9,36 @@ import de.tu_bs.wire.simwatch.api.types.Matrix;
 import de.tu_bs.wire.simwatch.api.types.Vector;
 import okio.BufferedSink;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Builder class to compose and send updates. Use the <code>put</code> and <code>attach</code>
+ * methods to add properties.Call {@link #post()} when done. For convenience most methods are
+ * chainable.
+ * <p>
+ * Example:
+ * <pre>
+ * {@code
+ * api.buildUpdate()
+ *   .put("finished", false)
+ *   .put("iteration", i)
+ *   .put("progress", (i + 1) / (double) SIZE)
+ *   .attach("render", new AttachmentStreamer() {
+ *      @Override
+ *      public void writeTo(OutputStream outputStream) throws IOException {
+ *          ImageIO.write(image, "png", outputStream);
+ *      }
+ *   })
+ *   .post();
+ *  }
+ * </pre>
+ * </p>
+ */
+@SuppressWarnings("WeakerAccess") /* api methods must be public  */
 public final class UpdateBuilder {
     private static final Gson gson = new Gson();
     private static final MediaType BINARY_MEDIA_TYPE = MediaType.parse("application/octet-stream");
@@ -32,33 +57,8 @@ public final class UpdateBuilder {
         return this;
     }
 
-    public UpdateBuilder put(String propertyName, int[] values) {
-        data.add(propertyName, gson.toJsonTree(values));
-        return this;
-    }
-
-    public UpdateBuilder put(String propertyName, long[] values) {
-        data.add(propertyName, gson.toJsonTree(values));
-        return this;
-    }
-
-    public UpdateBuilder put(String propertyName, float[] values) {
-        data.add(propertyName, gson.toJsonTree(values));
-        return this;
-    }
-
-    public UpdateBuilder put(String propertyName, double[] values) {
-        data.add(propertyName, gson.toJsonTree(values));
-        return this;
-    }
-
     public UpdateBuilder put(String propertyName, String value) {
         data.addProperty(propertyName, value);
-        return this;
-    }
-
-    public UpdateBuilder put(String propertyName, String[] values) {
-        data.add(propertyName, gson.toJsonTree(values));
         return this;
     }
 
@@ -67,18 +67,8 @@ public final class UpdateBuilder {
         return this;
     }
 
-    public UpdateBuilder put(String propertyName, boolean[] values) {
-        data.add(propertyName, gson.toJsonTree(values));
-        return this;
-    }
-
     public UpdateBuilder put(String propertyName, Matrix matrix) {
         data.add(propertyName, gson.toJsonTree(matrix));
-        return this;
-    }
-
-    public UpdateBuilder put(String propertyName, Matrix[] values) {
-        data.add(propertyName, gson.toJsonTree(values));
         return this;
     }
 
@@ -87,44 +77,81 @@ public final class UpdateBuilder {
         return this;
     }
 
-    public UpdateBuilder put(String propertyName, Vector[] values) {
-        data.add(propertyName, gson.toJsonTree(values));
-        return this;
-    }
-
     public UpdateBuilder attach(String propertyName, byte[] data) {
         attachments.put(propertyName, RequestBody.create(BINARY_MEDIA_TYPE, data));
         return this;
     }
 
-    public UpdateBuilder attach(String propertyName, StreamWriter streamWriter) {
-        attachments.put(propertyName, new WriterRequestBody(streamWriter));
+    /**
+     * Attach a file as binary property to the update object.
+     *
+     * @param propertyName Name of the property as defined in the simulation profile
+     * @param file         File to read the data from
+     * @return this UpdateBuilder for method chaining
+     */
+    public UpdateBuilder attach(String propertyName, File file) {
+        attachments.put(propertyName, RequestBody.create(BINARY_MEDIA_TYPE, file));
         return this;
     }
 
+    /**
+     * Attach a binary property to the update object.
+     * <p><b>Warning</b>: the entire content of the stream will be buffered in memory.
+     * If this is a problem, use {@link #attach(String, File)} instead</p>
+     *
+     * @param propertyName Name of the property as defined in the simulation profile
+     * @param streamer     A {@link AttachmentStreamer}. Will be called when posting the update
+     * @return this UpdateBuilder for method chaining
+     */
+    public UpdateBuilder attach(String propertyName, AttachmentStreamer streamer) {
+        attachments.put(propertyName, new BufferedRequestBody(streamer));
+        return this;
+    }
+
+    /**
+     * Construct the simulation update and send it to the backend. This is a synchronous call
+     * and will block until finished. Errors are logged.
+     */
     public void post() {
-        connector.update(new Update(data, attachments.keySet()));
+        connector.update(new Update(data, attachments.keySet()), attachments);
     }
 
-    public interface StreamWriter {
-        void writeTo(OutputStream outputStream) throws IOException;
-    }
+    /**
+     * Wrapper class to convert {@link AttachmentStreamer} into an HTTP request body.
+     * Buffers the entire data from the StreamWriter to determine the content-length
+     * header. This is necessary if the backend does not support chunked transfers.
+     */
+    private static class BufferedRequestBody extends RequestBody {
+        private final AttachmentStreamer streamer;
+        private byte[] buffer;
 
-    private static class WriterRequestBody extends RequestBody {
-        private final StreamWriter streamWriter;
+        public BufferedRequestBody(AttachmentStreamer streamer) {
+            this.streamer = streamer;
+        }
 
-        public WriterRequestBody(StreamWriter streamWriter) {
-            this.streamWriter = streamWriter;
+        private void fillBuffer() throws IOException {
+            if (buffer == null) {
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                streamer.writeTo(outputStream);
+                buffer = outputStream.toByteArray();
+            }
+        }
+
+        @Override
+        public long contentLength() throws IOException {
+            fillBuffer();
+            return buffer.length;
+        }
+
+        @Override
+        public void writeTo(BufferedSink sink) throws IOException {
+            fillBuffer();
+            streamer.writeTo(sink.outputStream());
         }
 
         @Override
         public MediaType contentType() {
             return BINARY_MEDIA_TYPE;
-        }
-
-        @Override
-        public void writeTo(BufferedSink sink) throws IOException {
-            streamWriter.writeTo(sink.outputStream());
         }
     }
 }
