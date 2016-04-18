@@ -1,6 +1,10 @@
 package de.tu_bs.wire.simwatch.simulation;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -16,6 +20,7 @@ import de.tu_bs.wire.simwatch.net.HTTPInstanceProvider;
 import de.tu_bs.wire.simwatch.net.HTTPUpdateProvider;
 import de.tu_bs.wire.simwatch.net.InstanceProvider;
 import de.tu_bs.wire.simwatch.simulation.profile.ProfileManager;
+import de.tu_bs.wire.simwatch.ui.activities.SettingsActivity;
 
 /**
  * Manages the storage of Simulations on the phone
@@ -229,6 +234,34 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
             sims = simulations.values();
         }
         new HTTPUpdateProvider(this, context).update(sims);
+    }
+
+    /**
+     * Updates all Instances, if the user set this behaviour in the settings
+     *
+     * @return true, if Instances will be updated due to this call
+     */
+    public boolean autoUpdate() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+        String autoUpdateWhen = sharedPref.getString(SettingsActivity.AUTO_UPDATE_WHEN, "");
+        switch (autoUpdateWhen) {
+            case "always":
+                updateAllInstances();
+                return true;
+            case "wifi":
+                ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+                if (mWifi.isConnected()) {
+                    updateAllInstances();
+                    return true;
+                } else {
+                    return false;
+                }
+            case "manually":
+            default:
+                return false;
+        }
     }
 
     public void addInstanceAcquisitionListener(InstanceAcquisitionListener listener) {

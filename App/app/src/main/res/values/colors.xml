@@ -5,4 +5,5 @@
     <color name="colorAccent">#FF4081</color>
     <color name="colorNavHeaderPrimary">#ce1e3c</color>
     <color name="colorNavHeaderSecondary">#8e1e3c</color>
+    <color name="colorTextContrasted">#000000</color>
 </resources>

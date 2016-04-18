@@ -1,5 +1,9 @@
 package de.tu_bs.wire.simwatch.net.requests;
 
+import android.util.Log;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 import de.tu_bs.wire.simwatch.api.models.Instance;
@@ -14,6 +18,7 @@ public class UpdateRequest {
 
     public static final String UPDATES_URL = "http://aquahaze.de:5001/instance/%s/updates/-1";
     public static final String NEW_UPDATES_URL = "http://aquahaze.de:5001/instance/%s/updates/%s";
+    private static final String TAG = "UpdateRequest";
 
     private Instance instance;
 
@@ -21,15 +26,20 @@ public class UpdateRequest {
         this.instance = instance;
     }
 
-    public String getURL() {
+    public URL getURL() {
         String id = instance.getID();
         List<Update> updates = instance.getUpdates();
-        if (!updates.isEmpty()) {
-            Update lastUpdate = updates.get(updates.size() - 1);
-            String lastUpdateID = lastUpdate.getID();
-            return String.format(NEW_UPDATES_URL, id, lastUpdateID);
-        } else {
-            return String.format(UPDATES_URL, id);
+        try {
+            if (!updates.isEmpty()) {
+                Update lastUpdate = updates.get(updates.size() - 1);
+                String lastUpdateID = lastUpdate.getID();
+                return new URL(String.format(NEW_UPDATES_URL, id, lastUpdateID));
+            } else {
+                return new URL(String.format(UPDATES_URL, id));
+            }
+        } catch (MalformedURLException e) {
+            Log.e(TAG,"Created malformed URL",e);
+            return null;
         }
     }
 
