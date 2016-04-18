@@ -59,7 +59,7 @@ public class SimulationPainter {
             if (viewGroup != null && attribute != null) {
                 switch (Types.getType(type)) {
                     case NUMBER:
-                        Double d = new Gson().fromJson(attribute.getAsString(), Double.class);
+                        Double d = new Gson().fromJson(attribute, Double.class);
                         if (d == d.intValue()) {
                             drawString(viewGroup, name + ": " + d.intValue());
                         } else {
@@ -67,19 +67,19 @@ public class SimulationPainter {
                         }
                         break;
                     case STRING:
-                        String s = new Gson().fromJson(attribute.getAsString(), String.class);
+                        String s = new Gson().fromJson(attribute, String.class);
                         drawString(viewGroup, name + ": " + s);
                         break;
                     case VECTOR:
-                        Vector vector = new Gson().fromJson(attribute.getAsString(), Vector.class);
+                        Vector vector = new Gson().fromJson(attribute, Vector.class);
                         drawString(viewGroup, name + ": " + vector.toString());
                         break;
                     case MATRIX:
-                        Matrix matrix = new Gson().fromJson(attribute.getAsString(), Matrix.class);
+                        Matrix matrix = new Gson().fromJson(attribute, Matrix.class);
                         drawString(viewGroup, name + ": " + matrix.toString());
                         break;
                     case BOOLEAN:
-                        Boolean bool = new Gson().fromJson(attribute.getAsString(), Boolean.class);
+                        Boolean bool = new Gson().fromJson(attribute, Boolean.class);
                         drawString(viewGroup, name + ": " + bool.toString());
                         break;
                     case PLOTTABLE:

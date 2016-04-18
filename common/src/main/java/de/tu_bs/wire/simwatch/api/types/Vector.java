@@ -40,6 +40,11 @@ public final class Vector {
     }
 
     @Override
+    public String toString() {
+        return Arrays.toString(data);
+    }
+
+    @Override
     public int hashCode() {
         int result = length;
         result = 31 * result + Arrays.hashCode(data);
