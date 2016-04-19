@@ -231,7 +231,7 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
         profileManager.haveProfiles(accumulateProfiles());
         Collection<Instance> sims;
         synchronized (simulations) {
-            sims = simulations.values();
+            sims = new ArrayList<>(simulations.values());
         }
         new HTTPUpdateProvider(this, context).update(sims);
     }
