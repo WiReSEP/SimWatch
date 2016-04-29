@@ -51,7 +51,7 @@ public class SimWatchClient {
     public static SimWatchClient registerSimulation(String name, File profileFile)
             throws RegistrationException {
         // todo the backend ip must be configurable
-        SimWatchClient instance = new SimWatchClient("http://localhost:5000/");
+        SimWatchClient instance = new SimWatchClient("http://aquahaze.de:5001/");
         instance.register(name, profileFile);
         return instance;
     }
