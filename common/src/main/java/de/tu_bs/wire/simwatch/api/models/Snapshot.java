@@ -15,14 +15,16 @@ public class Snapshot {
 
     private final String profile;
     private final JsonObject data;
+    private String instanceID;
     private String name;
     private List<Update> updates;
 
-    public Snapshot(String name, String profile) {
-        this(name, profile, new JsonObject(), new ArrayList<Update>());
+    public Snapshot(String instanceID, String name, String profile) {
+        this(instanceID, name, profile, new JsonObject(), new ArrayList<Update>());
     }
 
-    public Snapshot(String name, String profile, JsonObject data, List<Update> updates) {
+    public Snapshot(String instanceID, String name, String profile, JsonObject data, List<Update> updates) {
+        this.instanceID = instanceID;
         this.name = name;
         this.profile = profile;
         this.data = data;
@@ -64,7 +66,11 @@ public class Snapshot {
     }
 
     public List<Update> getUpdates() {
-        return updates;
+        return new ArrayList<>(updates);
+    }
+
+    public String getInstanceID() {
+        return instanceID;
     }
 
     public String getName() {

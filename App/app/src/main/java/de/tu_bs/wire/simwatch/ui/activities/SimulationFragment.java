@@ -42,8 +42,6 @@ public class SimulationFragment extends Fragment {
     private Snapshot snapshot;
     private int snapshotID;
 
-    private OnSnapshotSelectedListener mListener;
-
     public SimulationFragment() {
         // Required empty public constructor
     }
@@ -124,9 +122,7 @@ public class SimulationFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnSnapshotSelectedListener) {
-            mListener = (OnSnapshotSelectedListener) context;
-        } else {
+        if (!(context instanceof OnSnapshotSelectedListener)) {
             throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
         }
     }
@@ -134,7 +130,6 @@ public class SimulationFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
     }
 
     public interface OnSnapshotSelectedListener {

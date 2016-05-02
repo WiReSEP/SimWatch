@@ -60,10 +60,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string
                 .navigation_drawer_open, R.string.navigation_drawer_close);
+        //noinspection ConstantConditions
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        //noinspection ConstantConditions
         navigationView.setNavigationItemSelectedListener(this);
 
         profileManager = new ProfileManager(this);
@@ -85,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
 
         //set onClick listeners
         ImageView updateImgMain = (ImageView) findViewById(R.id.updateImgMain);
+        //noinspection ConstantConditions
         updateImgMain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -99,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
                 updateSimulations();
             }
         });
+        simulationManager.autoUpdate();
     }
 
     private void buildSimulationMenu(final Menu menu) {
@@ -119,6 +123,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        //noinspection ConstantConditions
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -197,6 +202,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        //noinspection ConstantConditions
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -268,6 +274,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
         });
         ViewMemory viewMemory = simulationManager.getViewMemory();
         if (currentSimulation != null && viewMemory.viewInstance(currentSimulation, currentSnapshotIndex) > 0) {
+            //noinspection ConstantConditions
             buildSimulationMenu(((NavigationView) findViewById(R.id.nav_view)).getMenu());
         }
     }
@@ -310,6 +317,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
 
     @Override
     public void onInstanceListAcquired(Collection<String> instanceIDs) {
+        //noinspection ConstantConditions
         buildSimulationMenu(((NavigationView) findViewById(R.id.nav_view)).getMenu());
         if (currentSimulation == null) {
             if (simulationManager.getInstanceList().size() == simulationManager.getInstances().size()) {
@@ -329,6 +337,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
 
     @Override
     public void onInstanceAcquired(Instance sim) {
+        //noinspection ConstantConditions
         buildSimulationMenu(((NavigationView) findViewById(R.id.nav_view)).getMenu());
         if (currentSimulation == null) {
             if (simulationManager.getInstanceList().size() == simulationManager.getInstances().size()) {

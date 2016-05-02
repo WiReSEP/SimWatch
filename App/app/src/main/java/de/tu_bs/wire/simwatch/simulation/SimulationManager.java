@@ -1,10 +1,6 @@
 package de.tu_bs.wire.simwatch.simulation;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.preference.PreferenceManager;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -15,12 +11,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.tu_bs.wire.simwatch.api.models.Attachment;
 import de.tu_bs.wire.simwatch.api.models.Instance;
 import de.tu_bs.wire.simwatch.net.HTTPInstanceProvider;
 import de.tu_bs.wire.simwatch.net.HTTPUpdateProvider;
 import de.tu_bs.wire.simwatch.net.InstanceProvider;
+import de.tu_bs.wire.simwatch.net.UpdateSettings;
 import de.tu_bs.wire.simwatch.simulation.profile.ProfileManager;
-import de.tu_bs.wire.simwatch.ui.activities.SettingsActivity;
 
 /**
  * Manages the storage of Simulations on the phone
@@ -135,6 +132,7 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
     @Override
     public void onInstanceAcquired(Instance sim) {
         addInstance(sim);
+        updateAttachmentsOf(sim);
         writeToFile(sim);
         synchronized (instanceListeners) {
             for (InstanceAcquisitionListener instanceListener : instanceListeners) {
@@ -234,6 +232,25 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
             sims = new ArrayList<>(simulations.values());
         }
         new HTTPUpdateProvider(this, context).update(sims);
+
+        AttachmentManager attachmentManager = AttachmentManager.getInstance(context);
+        Collection<Attachment> allAttachments = new ArrayList<>();
+        synchronized (simulations) {
+            for (Instance instance : simulations.values()) {
+                allAttachments.addAll(instance.getAttachments());
+                updateAttachmentsOf(instance);
+            }
+        }
+        attachmentManager.removeAllExcept(allAttachments);
+    }
+
+    private void updateAttachmentsOf(Instance instance) {
+        AttachmentManager attachmentManager = AttachmentManager.getInstance(context);
+        Collection<Attachment> attachments = instance.getAttachments();
+        for (Attachment attachment : attachments) {
+            String newestOccurrence = instance.getLastOccurrence(attachment.getAttachmentName());
+            attachmentManager.download(attachment, newestOccurrence);
+        }
     }
 
     /**
@@ -242,26 +259,11 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
      * @return true, if Instances will be updated due to this call
      */
     public boolean autoUpdate() {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
-        String autoUpdateWhen = sharedPref.getString(SettingsActivity.AUTO_UPDATE_WHEN, "");
-        switch (autoUpdateWhen) {
-            case "always":
-                updateAllInstances();
-                return true;
-            case "wifi":
-                ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-                NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-
-                if (mWifi.isConnected()) {
-                    updateAllInstances();
-                    return true;
-                } else {
-                    return false;
-                }
-            case "manually":
-            default:
-                return false;
+        boolean doUpdate = new UpdateSettings(context).autoUpdateEnabled();
+        if (doUpdate) {
+            updateAllInstances();
         }
+        return doUpdate;
     }
 
     public void addInstanceAcquisitionListener(InstanceAcquisitionListener listener) {

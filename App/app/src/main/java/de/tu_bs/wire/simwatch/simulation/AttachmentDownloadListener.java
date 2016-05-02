@@ -7,13 +7,9 @@ import java.io.File;
  */
 public interface AttachmentDownloadListener {
 
-    void onFileChanged(File file);
-
-    void onFileUnchanged(File file);
-
     void onDownloaded(File file);
 
-    void onCouldNotCheckForChange(File file);
-
     void onCouldNotDownload(File file);
+
+    void onRetryLater(File file);
 }

@@ -8,10 +8,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Date;
 
+import de.tu_bs.wire.simwatch.api.models.Attachment;
 import de.tu_bs.wire.simwatch.net.requests.AttachmentRequest;
 import de.tu_bs.wire.simwatch.simulation.AttachmentDownloadListener;
 
@@ -29,36 +30,8 @@ public class HTTPAttachmentProvider extends AttachmentProvider {
     }
 
     @Override
-    public void checkForChange(String attachmentName, Date lastModified, File outputFile) {
-        AttachmentRequest attachmentRequest = new AttachmentRequest(attachmentName);
-        URL url = attachmentRequest.getURL();
-
-        if (url != null) {
-            checkForChange(url, lastModified, outputFile);
-        } else {
-            listener.onCouldNotCheckForChange(outputFile);
-        }
-    }
-
-    @Override
-    public void checkForChange(URL url, Date lastModified, File outputFile) {
-        try {
-            URLConnection connection= url.openConnection();
-            Date newLastModified = new Date(connection.getLastModified());
-            if (lastModified.equals(newLastModified)) {
-                listener.onFileUnchanged(outputFile);
-            } else {
-                listener.onFileChanged(outputFile);
-            }
-        } catch (IOException e) {
-            Log.e(TAG,"IOException checking for change",e);
-            listener.onCouldNotCheckForChange(outputFile);
-        }
-    }
-
-    @Override
-    public void download(String attachmentName, File outputFile) {
-        AttachmentRequest attachmentRequest = new AttachmentRequest(attachmentName);
+    public void download(Attachment attachment, File outputFile) {
+        AttachmentRequest attachmentRequest = new AttachmentRequest(attachment);
         URL url = attachmentRequest.getURL();
 
         if (url != null) {
@@ -67,26 +40,37 @@ public class HTTPAttachmentProvider extends AttachmentProvider {
     }
 
     @Override
-    public void download(URL url, File outputFile) {
-        try {
-            InputStream is = url.openStream();
-            DataInputStream dis = new DataInputStream(is);
+    public void download(final URL url, final File outputFile) {
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Log.d(TAG, "Downloading from '" + url + "'");
 
-            byte[] buffer = new byte[BUFFER_SIZE];
-            int length;
+                    URLConnection urlConnection = url.openConnection();
+                    if (!(urlConnection instanceof HttpURLConnection)) {
+                        Log.d(TAG, "URL '" + url + "' does not open a httpConnection");
+                        throw new IOException(String.format("Cannot open http connection: URL: '%s'", url));
+                    }
+                    HttpURLConnection httpUrlConnection = (HttpURLConnection) url.openConnection();
+                    InputStream is = httpUrlConnection.getInputStream();
+                    DataInputStream dis = new DataInputStream(is);
 
-            FileOutputStream os = new FileOutputStream(outputFile);
-            while ((length = dis.read(buffer)) > 0) {
-                os.write(buffer, 0, length);
+                    byte[] buffer = new byte[BUFFER_SIZE];
+                    int length;
+
+                    FileOutputStream os = new FileOutputStream(outputFile);
+                    while ((length = dis.read(buffer)) > 0) {
+                        os.write(buffer, 0, length);
+                    }
+                    os.flush();
+                    os.close();
+                    listener.onDownloaded(outputFile);
+                } catch (IOException e) {
+                    Log.e(TAG, "IO error", e);
+                    listener.onCouldNotDownload(outputFile);
+                }
             }
-            os.close();
-            listener.onDownloaded(outputFile);
-        } catch (IOException e) {
-            Log.e(TAG, "IO error", e);
-            listener.onCouldNotDownload(outputFile);
-        } catch (SecurityException e) {
-            Log.e(TAG, "Security error", e);
-            listener.onCouldNotDownload(outputFile);
-        }
+        }.start();
     }
 }

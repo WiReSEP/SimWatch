@@ -4,7 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+
+import de.tu_bs.wire.simwatch.api.types.Types;
 
 public class Instance {
     @SerializedName("_id")
@@ -68,7 +72,7 @@ public class Instance {
      * @return Snapshot after i-th update
      */
     public Snapshot getSnapshot(int i) {
-        Snapshot snapshot = new Snapshot(name, profileID);
+        Snapshot snapshot = new Snapshot(ID, name, profileID);
         for (int j = 0; j < i && j < getNumberOfUpdates(); j++) {
             snapshot.addUpdate(updates.get(j));
         }
@@ -100,6 +104,18 @@ public class Instance {
         }
     }
 
+    public String getLastOccurrence(String attachmentName) {
+        String updateID = null;
+        for (int i = updates.size() - 1; i >= 0; i--) {
+            Update update = updates.get(i);
+            if (update.attachments.contains(attachmentName)) {
+                updateID = update.getID();
+                break;
+            }
+        }
+        return updateID;
+    }
+
     public String getProfileID() {
         return profileID;
     }
@@ -113,6 +129,22 @@ public class Instance {
 
         return ID != null ? ID.equals(instance.ID) : instance.ID == null;
 
+    }
+
+    public Collection<Attachment> getAttachments() {
+        Collection<Attachment> attachments = new ArrayList<>();
+        Map<String, String> properties = getProfile().getProperties();
+        for (String propertyName : properties.keySet()) {
+            Types.Type propertyType = Types.getType(properties.get(propertyName));
+            switch (propertyType) {
+                case IMAGE_BINARY:
+                case NON_IMAGE_BINARY:
+                    attachments.add(new Attachment(getID(), propertyName));
+                    break;
+                default:
+            }
+        }
+        return attachments;
     }
 
     public boolean add(Update u) {

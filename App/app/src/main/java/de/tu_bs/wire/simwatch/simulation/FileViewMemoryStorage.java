@@ -46,7 +46,7 @@ public class FileViewMemoryStorage extends ViewMemoryStorage {
                 scanner.useDelimiter("\\A");
                 String str = scanner.next();
                 scanner.close();
-                Type type = new TypeToken<HashMap<String, Integer>>() {
+                Type type = new TypeToken<Map<String, Integer>>() {
                 }.getType();
                 try {
                     return new Gson().fromJson(str, type);
