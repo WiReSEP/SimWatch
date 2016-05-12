@@ -1,0 +1,11 @@
+# SimWatch example API configuration
+# change the values to fit your setup and rename this file to simwatch.yaml
+
+# backend base URL (the SimWatch server)
+url: http://localhost:5000
+
+# enable logging of http requests?
+# only basic information like response codes, latency and urls will be logged
+# for every update
+requestLoggingEnabled: false
+
