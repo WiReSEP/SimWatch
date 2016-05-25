@@ -25,7 +25,7 @@ import de.tu_bs.wire.simwatch.simulation.profile.ProfileManager;
 public class SimulationManager implements InstanceAcquisitionListener, UpdateListener {
 
     private static final String TAG = "SimulationManager";
-
+    private static SimulationManager instance;
     private final Map<String, Instance> simulations;
     private final Multimap<UpdateListener, String> updateListenerRegistrations;
     private final Collection<InstanceAcquisitionListener> instanceListeners;
@@ -36,9 +36,9 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
     private SimulationStorage storage;
     private ViewMemory viewMemory;
 
-    public SimulationManager(Context context, ProfileManager profileManager) throws IOException {
+    private SimulationManager(Context context) throws IOException {
         this.context = context;
-        this.profileManager = profileManager;
+        this.profileManager = ProfileManager.getInstance(context);
         simulations = new HashMap<>();
         storage = new FileSimulationStorage(context);
         readAllInstances();
@@ -48,6 +48,20 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
         instanceListeners = new ArrayList<>();
         existingInstanceIDs = new ArrayList<>(simulations.keySet());
         viewMemory = new ViewMemory(context);
+    }
+
+    public static SimulationManager getInstance(Context context) throws IOException {
+        if (instance == null) {
+            instance = new SimulationManager(context);
+        }
+        return instance;
+    }
+
+    public static SimulationManager getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("SimulationManager not instantiated");
+        }
+        return instance;
     }
 
     public ViewMemory getViewMemory() {

@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
         //noinspection ConstantConditions
         navigationView.setNavigationItemSelectedListener(this);
 
-        profileManager = new ProfileManager(this);
+        profileManager = ProfileManager.getInstance(this);
         try {
             setupSimulationManager();
         } catch (IOException e) {
@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
     }
 
     private void setupSimulationManager() throws IOException {
-        simulationManager = new SimulationManager(this, profileManager);
+        simulationManager = SimulationManager.getInstance(this);
         simulationManager.addInstanceAcquisitionListener(this);
     }
 

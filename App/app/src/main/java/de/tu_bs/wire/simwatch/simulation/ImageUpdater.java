@@ -42,4 +42,8 @@ public class ImageUpdater implements AttachmentDownloadListener {
     public void onRetryLater(File file) {
         //nothing
     }
+
+    public ImageView getImageView() {
+        return imageView;
+    }
 }

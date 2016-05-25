@@ -15,15 +15,30 @@ import de.tu_bs.wire.simwatch.net.HTTPProfileProvider;
  */
 public class ProfileManager implements ProfileAcquisitionListener {
 
+    static ProfileManager instance;
     private final Map<String, Profile> profiles;
     private final ProfileStorage storage;
-    private Context context;
+    private final Context context;
 
-    public ProfileManager(Context context) {
+    private ProfileManager(Context context) {
         this.context = context;
         profiles = new HashMap<>();
         storage = new FileProfileStorage(context);
         readAllInstances();
+    }
+
+    synchronized public static ProfileManager getInstance(Context context) {
+        if (instance == null) {
+            instance = new ProfileManager(context);
+        }
+        return instance;
+    }
+
+    public static ProfileManager getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("ProfileManager not initialized");
+        }
+        return instance;
     }
 
     public void readAllInstances() {

@@ -25,6 +25,8 @@ import de.tu_bs.wire.simwatch.api.types.Types;
 import de.tu_bs.wire.simwatch.api.types.Vector;
 import de.tu_bs.wire.simwatch.simulation.AttachmentManager;
 import de.tu_bs.wire.simwatch.simulation.ImageUpdater;
+import de.tu_bs.wire.simwatch.ui.listeners.ImageClickListener;
+import de.tu_bs.wire.simwatch.ui.listeners.OpenFileListener;
 
 /**
  * Draws Snapshots of simulation Instances into Android layouts
@@ -114,6 +116,7 @@ public class SimulationPainter {
                     case IMAGE_BINARY:
                         ImageUpdater imageUpdater = drawImage(viewGroup, propertyName, file);
                         attachmentManager.addAttachmentListener(attachment, imageUpdater);
+                        imageUpdater.getImageView().setOnClickListener(new ImageClickListener(context, file));
                         break;
                     case NON_IMAGE_BINARY:
                         drawImage(viewGroup, propertyName, file);
@@ -127,6 +130,7 @@ public class SimulationPainter {
     }
 
     private ImageUpdater drawImage(ViewGroup viewGroup, String name, File file) {
+        //todo draw image in appropriate size
         Log.d(TAG, "Drawing image '" + name + "'");
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View newLayout = inflater.inflate(R.layout.captioned_image, null);
@@ -137,6 +141,7 @@ public class SimulationPainter {
 
         viewGroup.addView(newLayout);
 
+        image.setOnLongClickListener(new OpenFileListener(context, file));
         ImageUpdater imageUpdater = new ImageUpdater(context, image);
 
         if (file.exists() && file.canRead()) {
