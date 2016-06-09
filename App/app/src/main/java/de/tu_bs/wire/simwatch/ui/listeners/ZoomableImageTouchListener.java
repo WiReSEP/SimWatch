@@ -4,8 +4,10 @@ import android.graphics.Matrix;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
 
 import de.tu_bs.wire.simwatch.Vec2f;
+import de.tu_bs.wire.simwatch.ui.ImageScaleAnimation;
 import de.tu_bs.wire.simwatch.ui.views.ZoomableImageView;
 
 /**
@@ -76,6 +78,8 @@ public class ZoomableImageTouchListener implements View.OnTouchListener {
         switch (motionEvent.getActionMasked()) {
             case MotionEvent.ACTION_DOWN: //one finger down
             {
+                imageView.clearAnimation();
+
                 startingMatrix = movedMatrix;
                 startingPosition = getFirstFinger(motionEvent);
                 touchMode = TouchMode.ONE_FINGER;
@@ -94,33 +98,7 @@ public class ZoomableImageTouchListener implements View.OnTouchListener {
             break;
             case MotionEvent.ACTION_UP: //one finger up
             {
-                float values[] = new float[9];
-                movedMatrix.getValues(values);
-                if (values[SCALE] < minScale && values[SCALE] > 0) {
-                    float rescale = minScale / values[SCALE];
-                    movedMatrix.postScale(rescale, rescale, values[X_POS], values[Y_POS]);
-                    movedMatrix.getValues(values);
-                }
-                float leftX = values[X_POS];
-                float leftY = values[Y_POS];
-                float rightX = leftX + values[SCALE] * width;
-                float rightY = leftY + values[SCALE] * height;
-                if (leftX > minX && rightX > maxX) {
-                    float shift = Math.max(minX - leftX, maxX - rightX);
-                    movedMatrix.postTranslate(shift, 0);
-                } else if (rightX < maxX && leftX < minX) {
-                    float shift = Math.min(maxX - rightX, minX - leftX);
-                    movedMatrix.postTranslate(shift, 0);
-                }
-                if (leftY > minY && rightY > maxY) {
-                    float shift = Math.max(minY - leftY, maxY - rightY);
-                    movedMatrix.postTranslate(0, shift);
-                } else if (rightY < maxY && leftY < minY) {
-                    float shift = Math.min(maxY - rightY, minY - leftY);
-                    movedMatrix.postTranslate(0, shift);
-                }
-                imageView.setImageMatrix(movedMatrix);
-                imageView.invalidate();
+                rescaleToPretty(imageView);
                 startingMatrix = movedMatrix;
                 touchMode = TouchMode.NONE;
             }
@@ -172,6 +150,40 @@ public class ZoomableImageTouchListener implements View.OnTouchListener {
         }
 
         return true;
+    }
+
+    private void rescaleToPretty(ZoomableImageView imageView) {
+        float values[] = new float[9];
+        movedMatrix.getValues(values);
+        float scale = values[SCALE];
+        if (scale < minScale && scale > 0) {
+            float rescale = minScale / scale;
+            movedMatrix.postScale(rescale, rescale, values[X_POS], values[Y_POS]);
+            float scaleDiff = (1 - rescale) * scale;
+            movedMatrix.postTranslate(scaleDiff * width / 2, scaleDiff * height / 2);
+            movedMatrix.getValues(values);
+        }
+        float leftX = values[X_POS];
+        float leftY = values[Y_POS];
+        float rightX = leftX + values[SCALE] * width;
+        float rightY = leftY + values[SCALE] * height;
+        if (leftX > minX && rightX > maxX) {
+            float shift = Math.max(minX - leftX, maxX - rightX);
+            movedMatrix.postTranslate(shift, 0);
+        } else if (rightX < maxX && leftX < minX) {
+            float shift = Math.min(maxX - rightX, minX - leftX);
+            movedMatrix.postTranslate(shift, 0);
+        }
+        if (leftY > minY && rightY > maxY) {
+            float shift = Math.max(minY - leftY, maxY - rightY);
+            movedMatrix.postTranslate(0, shift);
+        } else if (rightY < maxY && leftY < minY) {
+            float shift = Math.min(maxY - rightY, minY - leftY);
+            movedMatrix.postTranslate(0, shift);
+        }
+        Animation animation = new ImageScaleAnimation(imageView, movedMatrix);
+        animation.setDuration(300);
+        imageView.startAnimation(animation);
     }
 
     /**

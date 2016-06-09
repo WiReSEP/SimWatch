@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.widget.ImageView;
 
 import java.io.File;
@@ -37,8 +36,6 @@ public class ImageUpdater implements AttachmentDownloadListener {
                 maxWidth = metrics.widthPixels;
                 maxHeight = metrics.heightPixels;
             }
-            Log.d(TAG, "maxWidth: " + maxWidth);
-            Log.d(TAG, "maxHeight: " + maxHeight);
             float scale = Math.min(Math.min(maxWidth / width, maxHeight / height), 1);
             final Bitmap scaledBitmap;
             if (scale > 0) {
