@@ -10,6 +10,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,33 +51,35 @@ public class HTTPUpdateProvider extends UpdateProvider {
                 Collection<String> updatedInstances = new ArrayList<>();
                 Collection<String> erroneousUpdates = new ArrayList<>();
                 for (Instance sim : sims) {
-                    UpdateRequest updateRequest = new UpdateRequest(sim);
-                    Request request = new Request.Builder().url(updateRequest.getURL()).build();
-                    Response response;
-                    try {
-                        response = client.newCall(request).execute();
+                    UpdateRequest updateRequest = new UpdateRequest(context, sim);
+                    URL url = updateRequest.getURL();
+                    if (url != null) {
+                        Request request = new Request.Builder().url(url).build();
+                        Response response;
+                        try {
+                            response = client.newCall(request).execute();
 
-                        if (response.isSuccessful()) {
-                            String responseString = response.body().string();
-                            //responseString = "[{\"data\":{\"var\":25,\"update_id\":1,\"line\":13}}]"; //fixme DEBUG
-                            Update responseArray[] = new Update[0];
-                            try {
-                                responseArray = new Gson().fromJson(responseString, Update[].class);
-                            } catch (JsonSyntaxException e) {
-                                Log.e(TAG, "Received Update for '" + sim.getID() + "' with broken syntax", e);
+                            if (response.isSuccessful()) {
+                                String responseString = response.body().string();
+                                Update responseArray[] = new Update[0];
+                                try {
+                                    responseArray = new Gson().fromJson(responseString, Update[].class);
+                                } catch (JsonSyntaxException e) {
+                                    Log.e(TAG, "Received Update for '" + sim.getID() + "' with broken syntax", e);
+                                }
+                                List<Update> updates = Arrays.asList(responseArray);
+                                if (applyUpdates(sim, updates)) {
+                                    updatedInstances.add(sim.getID());
+                                }
+                            } else {
+                                Log.e(TAG, "Cannot retrieve new Updates for '" + sim.getID() + "'. Failed with HTTP status code " + response.code());
+                                Log.d(TAG, "Request was " + request.urlString());
+                                erroneousUpdates.add(sim.getID());
                             }
-                            List<Update> updates = Arrays.asList(responseArray);
-                            if (applyUpdates(sim, updates)) {
-                                updatedInstances.add(sim.getID());
-                            }
-                        } else {
-                            Log.e(TAG, "Cannot retrieve new Updates for '" + sim.getID() + "'. Failed with HTTP status code " + response.code());
-                            Log.d(TAG, "Request was " + request.urlString());
+                        } catch (IOException e) {
+                            Log.e(TAG, "Cannot retrieve new Updates for '" + sim.getID(), e);
                             erroneousUpdates.add(sim.getID());
                         }
-                    } catch (IOException e) {
-                        Log.e(TAG, "Cannot retrieve new Updates for '" + sim.getID(), e);
-                        erroneousUpdates.add(sim.getID());
                     }
                 }
                 if (erroneousUpdates.size() == sims.size()) {

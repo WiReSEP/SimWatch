@@ -107,29 +107,33 @@ public class SimulationPainter {
         }
     }
 
-    private void drawBinaryProperty(ViewGroup viewGroup, String propertyName, Attachment attachment, String type) {
+    private void drawBinaryProperty(ViewGroup viewGroup, String propertyName, Attachment attachment, String typeName) {
         if (viewGroup != null && attachment != null) {
             AttachmentManager attachmentManager = AttachmentManager.getInstance(context);
             File file = attachmentManager.fileFromAttachmentName(attachment);
-            try {
-                switch (Types.getType(type)) {
-                    case IMAGE_BINARY:
-                        ImageUpdater imageUpdater = drawImage(viewGroup, propertyName, file);
-                        attachmentManager.addAttachmentListener(attachment, imageUpdater);
-                        imageUpdater.getImageView().setOnClickListener(new ImageClickListener(context, file));
-                        break;
-                    case NON_IMAGE_BINARY:
-                        drawImage(viewGroup, propertyName, file);
-                        break;
-                    default:
+            Types.Type type = Types.getType(typeName);
+            if (Types.isBinary(type)) {
+                String mimeType = Types.getMimeType(typeName);
+                try {
+                    switch (type) {
+                        case IMAGE_BINARY:
+                            ImageUpdater imageUpdater = drawImageForAttachment(viewGroup, propertyName, file, mimeType);
+                            attachmentManager.addAttachmentListener(attachment, imageUpdater);
+                            imageUpdater.getImageView().setOnClickListener(new ImageClickListener(context, file));
+                            break;
+                        case NON_IMAGE_BINARY:
+                            drawImageForAttachment(viewGroup, propertyName, file, mimeType);
+                            break;
+                        default:
+                    }
+                } catch (JsonSyntaxException e) {
+                    Log.e(TAG, "Cannot draw attribute. Property has a broken syntax", e);
                 }
-            } catch (JsonSyntaxException e) {
-                Log.e(TAG, "Cannot draw attribute. Property has a broken syntax", e);
             }
         }
     }
 
-    private ImageUpdater drawImage(ViewGroup viewGroup, String name, File file) {
+    private ImageUpdater drawImageForAttachment(ViewGroup viewGroup, String name, File file, String mimeType) {
         //todo draw image in appropriate size
         Log.d(TAG, "Drawing image '" + name + "'");
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -141,7 +145,7 @@ public class SimulationPainter {
 
         viewGroup.addView(newLayout);
 
-        image.setOnLongClickListener(new OpenFileListener(context, file));
+        image.setOnLongClickListener(new OpenFileListener(context, file, mimeType));
         ImageUpdater imageUpdater = new ImageUpdater(context, image);
 
         if (file.exists() && file.canRead()) {

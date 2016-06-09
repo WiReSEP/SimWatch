@@ -31,7 +31,7 @@ public class HTTPAttachmentProvider extends AttachmentProvider {
 
     @Override
     public void download(Attachment attachment, File outputFile) {
-        AttachmentRequest attachmentRequest = new AttachmentRequest(attachment);
+        AttachmentRequest attachmentRequest = new AttachmentRequest(context, attachment);
         URL url = attachmentRequest.getURL();
 
         if (url != null) {
@@ -41,36 +41,38 @@ public class HTTPAttachmentProvider extends AttachmentProvider {
 
     @Override
     public void download(final URL url, final File outputFile) {
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    Log.d(TAG, "Downloading from '" + url + "'");
+        if (url != null) {
+            new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        Log.d(TAG, "Downloading from '" + url + "'");
 
-                    URLConnection urlConnection = url.openConnection();
-                    if (!(urlConnection instanceof HttpURLConnection)) {
-                        Log.d(TAG, "URL '" + url + "' does not open a httpConnection");
-                        throw new IOException(String.format("Cannot open http connection: URL: '%s'", url));
+                        URLConnection urlConnection = url.openConnection();
+                        if (!(urlConnection instanceof HttpURLConnection)) {
+                            Log.d(TAG, "URL '" + url + "' does not open a httpConnection");
+                            throw new IOException(String.format("Cannot open http connection: URL: '%s'", url));
+                        }
+                        HttpURLConnection httpUrlConnection = (HttpURLConnection) url.openConnection();
+                        InputStream is = httpUrlConnection.getInputStream();
+                        DataInputStream dis = new DataInputStream(is);
+
+                        byte[] buffer = new byte[BUFFER_SIZE];
+                        int length;
+
+                        FileOutputStream os = new FileOutputStream(outputFile);
+                        while ((length = dis.read(buffer)) > 0) {
+                            os.write(buffer, 0, length);
+                        }
+                        os.flush();
+                        os.close();
+                        listener.onDownloaded(outputFile);
+                    } catch (IOException e) {
+                        Log.e(TAG, "IO error", e);
+                        listener.onCouldNotDownload(outputFile);
                     }
-                    HttpURLConnection httpUrlConnection = (HttpURLConnection) url.openConnection();
-                    InputStream is = httpUrlConnection.getInputStream();
-                    DataInputStream dis = new DataInputStream(is);
-
-                    byte[] buffer = new byte[BUFFER_SIZE];
-                    int length;
-
-                    FileOutputStream os = new FileOutputStream(outputFile);
-                    while ((length = dis.read(buffer)) > 0) {
-                        os.write(buffer, 0, length);
-                    }
-                    os.flush();
-                    os.close();
-                    listener.onDownloaded(outputFile);
-                } catch (IOException e) {
-                    Log.e(TAG, "IO error", e);
-                    listener.onCouldNotDownload(outputFile);
                 }
-            }
-        }.start();
+            }.start();
+        }
     }
 }

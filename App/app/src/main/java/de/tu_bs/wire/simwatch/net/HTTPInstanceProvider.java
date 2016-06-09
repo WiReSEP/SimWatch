@@ -12,6 +12,7 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,28 +43,29 @@ public class HTTPInstanceProvider extends InstanceProvider {
         new Thread() {
             @Override
             public void run() {
-                InstanceRequest instanceRequest = new InstanceRequest(id);
-                Request request = new Request.Builder().url(instanceRequest.getURL()).build();
-                Response response;
-                try {
-                    response = client.newCall(request).execute();
+                InstanceRequest instanceRequest = new InstanceRequest(context, id);
+                URL url = instanceRequest.getURL();
+                if (url != null) {
+                    Request request = new Request.Builder().url(url).build();
+                    Response response;
+                    try {
+                        response = client.newCall(request).execute();
 
-                    if (response.isSuccessful()) {
-                        String responseString = response.body().string();
-                        //responseString = "{\"_id\":\"myID\",\"name\":\"meine Simulation\"," +
-                        //        "\"profile_id\":\"proID\"}"; //fixme DEBUG
-                        Instance instance = null;
-                        try {
-                            instance = new Gson().fromJson(responseString, Instance.class);
-                        } catch (JsonSyntaxException e) {
-                            Log.e(TAG, "Received Instance '" + id + "' with broken syntax", e);
+                        if (response.isSuccessful()) {
+                            String responseString = response.body().string();
+                            Instance instance = null;
+                            try {
+                                instance = new Gson().fromJson(responseString, Instance.class);
+                            } catch (JsonSyntaxException e) {
+                                Log.e(TAG, "Received Instance '" + id + "' with broken syntax", e);
+                            }
+                            listener.onInstanceAcquired(instance);
+                        } else {
+                            Log.e(TAG, "Cannot retrieve Instance '" + id + "'. Failed with HTTP status code " + response.code());
                         }
-                        listener.onInstanceAcquired(instance);
-                    } else {
-                        Log.e(TAG, "Cannot retrieve Instance '" + id + "'. Failed with HTTP status code " + response.code());
+                    } catch (IOException e) {
+                        Log.e(TAG, "Cannot retrieve new Instance '" + id + "'", e);
                     }
-                } catch (IOException e) {
-                    Log.e(TAG, "Cannot retrieve new Instance '" + id + "'", e);
                 }
             }
         }.start();
@@ -87,24 +89,27 @@ public class HTTPInstanceProvider extends InstanceProvider {
         new Thread() {
             @Override
             public void run() {
-                DeleteRequest deleteRequest = new DeleteRequest(id);
+                DeleteRequest deleteRequest = new DeleteRequest(context, id);
                 MediaType postMediaType = deleteRequest.getPostMediaType();
                 String postBody = deleteRequest.getPOSTData();
-                Request request = new Request.Builder()
-                        .url(deleteRequest.getURL())
-                        .post(RequestBody.create(postMediaType, postBody))
-                        .build();
-                try {
-                    Response response = client.newCall(request).execute();
-                    if (response.isSuccessful()) {
-                        Log.d(TAG, "Successfully deleted Instance '" + id + "'");
-                        listener.onInstanceDeleted(id);
-                    } else {
-                        Log.e(TAG, "Cannot delete Instance '" + id + "'. Failed with HTTP status code " + response.code());
+                URL url = deleteRequest.getURL();
+                if (url != null) {
+                    Request request = new Request.Builder()
+                            .url(url)
+                            .post(RequestBody.create(postMediaType, postBody))
+                            .build();
+                    try {
+                        Response response = client.newCall(request).execute();
+                        if (response.isSuccessful()) {
+                            Log.d(TAG, "Successfully deleted Instance '" + id + "'");
+                            listener.onInstanceDeleted(id);
+                        } else {
+                            Log.e(TAG, "Cannot delete Instance '" + id + "'. Failed with HTTP status code " + response.code());
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, "Cannot delete Instance '" + id + "'");
+                        listener.onInstanceListAcquired(new ArrayList<String>());
                     }
-                } catch (IOException e) {
-                    Log.e(TAG, "Cannot delete Instance '" + id + "'");
-                    listener.onInstanceListAcquired(new ArrayList<String>());
                 }
             }
         }.start();
@@ -115,31 +120,33 @@ public class HTTPInstanceProvider extends InstanceProvider {
         new Thread() {
             @Override
             public void run() {
-                InstanceListRequest listRequest = new InstanceListRequest();
-                Request request = new Request.Builder().url(listRequest.getURL()).build();
-                Response response;
-                try {
-                    response = client.newCall(request).execute();
+                InstanceListRequest listRequest = new InstanceListRequest(context);
+                URL url = listRequest.getURL();
+                if (url != null) {
+                    Request request = new Request.Builder().url(url).build();
+                    Response response;
+                    try {
+                        response = client.newCall(request).execute();
 
-                    if (response.isSuccessful()) {
-                        String responseString = response.body().string();
-                        //responseString = "[\"myID\"]"; //fixme DEBUG
-                        String instances[] = new String[0];
-                        try {
-                            instances = new Gson().fromJson(responseString, String[].class);
-                        } catch (JsonSyntaxException e) {
-                            Log.e(TAG, "Received Instance list with broken syntax", e);
+                        if (response.isSuccessful()) {
+                            String responseString = response.body().string();
+                            String instances[] = new String[0];
+                            try {
+                                instances = new Gson().fromJson(responseString, String[].class);
+                            } catch (JsonSyntaxException e) {
+                                Log.e(TAG, "Received Instance list with broken syntax", e);
+                            }
+                            Collection<String> instancesColl = new ArrayList<>();
+                            Collections.addAll(instancesColl, instances);
+                            listener.onInstanceListAcquired(instancesColl);
+                        } else {
+                            Log.e(TAG, "Cannot retrieve Instance list. Failed with HTTP status code " + response.code());
+                            listener.onInstanceListAcquisitionFailed();
                         }
-                        Collection<String> instancesColl = new ArrayList<>();
-                        Collections.addAll(instancesColl, instances);
-                        listener.onInstanceListAcquired(instancesColl);
-                    } else {
-                        Log.e(TAG, "Cannot retrieve Instance list. Failed with HTTP status code " + response.code());
+                    } catch (IOException e) {
+                        Log.e(TAG, "Cannot retrieve Instance list", e);
                         listener.onInstanceListAcquisitionFailed();
                     }
-                } catch (IOException e) {
-                    Log.e(TAG, "Cannot retrieve Instance list", e);
-                    listener.onInstanceListAcquisitionFailed();
                 }
             }
         }.start();

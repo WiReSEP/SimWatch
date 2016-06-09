@@ -102,7 +102,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView
                 updateSimulations();
             }
         });
-        simulationManager.autoUpdate();
+        if (savedInstanceState == null) {
+            simulationManager.autoUpdate();
+        }
     }
 
     private void buildSimulationMenu(final Menu menu) {

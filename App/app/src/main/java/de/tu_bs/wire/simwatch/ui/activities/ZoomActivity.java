@@ -41,8 +41,11 @@ public class ZoomActivity extends AppCompatActivity {
         imageView.setImageBitmap(displayBitmap);
         int width = displayBitmap.getWidth();
         int height = displayBitmap.getHeight();
-        float scaleMin = 1;
-        imageView.setOnTouchListener(new ZoomableImageTouchListener(width, height, scaleMin, displaySize.x, displaySize.y));
+        float scaleMin = Math.min((float) displaySize.x / width, (float) displaySize.y / height);
+
+        ZoomableImageTouchListener touchListener = new ZoomableImageTouchListener(width, height, scaleMin, displaySize.x, displaySize.y);
+        imageView.setOnTouchListener(touchListener);
+        touchListener.center(imageView);
     }
 
     @Override

@@ -3,6 +3,8 @@ package de.tu_bs.wire.simwatch.simulation;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.widget.ImageView;
 
 import java.io.File;
@@ -12,6 +14,7 @@ import java.io.File;
  */
 public class ImageUpdater implements AttachmentDownloadListener {
 
+    private static final String TAG = "ImageUpdater";
     private final ImageView imageView;
     private Activity context;
 
@@ -22,12 +25,31 @@ public class ImageUpdater implements AttachmentDownloadListener {
 
     @Override
     public void onDownloaded(File file) {
-        final Bitmap imageBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+        Bitmap imageBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
         if (imageBitmap != null) {
+            int width = imageBitmap.getWidth();
+            int height = imageBitmap.getHeight();
+            float maxWidth = imageView.getWidth();
+            float maxHeight = imageView.getHeight();
+            if (maxWidth == 0 || maxHeight == 0) {
+                DisplayMetrics metrics = new DisplayMetrics();
+                context.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+                maxWidth = metrics.widthPixels;
+                maxHeight = metrics.heightPixels;
+            }
+            Log.d(TAG, "maxWidth: " + maxWidth);
+            Log.d(TAG, "maxHeight: " + maxHeight);
+            float scale = Math.min(Math.min(maxWidth / width, maxHeight / height), 1);
+            final Bitmap scaledBitmap;
+            if (scale > 0) {
+                scaledBitmap = Bitmap.createScaledBitmap(imageBitmap, (int) (width * scale), (int) (height * scale), true);
+            } else {
+                scaledBitmap = imageBitmap;
+            }
             context.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    imageView.setImageBitmap(imageBitmap);
+                    imageView.setImageBitmap(scaledBitmap);
                 }
             });
         }

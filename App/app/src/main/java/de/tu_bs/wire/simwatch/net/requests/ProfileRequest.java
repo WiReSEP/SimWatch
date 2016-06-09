@@ -1,27 +1,33 @@
 package de.tu_bs.wire.simwatch.net.requests;
 
+import android.content.Context;
 import android.util.Log;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import de.tu_bs.wire.simwatch.net.UpdateSettings;
 
 /**
  * Created by mw on 09.02.16.
  */
 public class ProfileRequest {
 
-    public static final String PROFILE_URL = "http://aquahaze.de:5001/profile/%s";
+    public static final String PROFILE_URL = "%s/profile/%s";
     private static final String TAG = "ProfileRequest";
 
     private String id;
+    private Context context;
 
-    public ProfileRequest(String id) {
+    public ProfileRequest(Context context, String id) {
+        this.context = context;
         this.id = id;
     }
 
     public URL getURL() {
         try {
-            return new URL(String.format(PROFILE_URL, id));
+            String serverAddress = new UpdateSettings(context).getServerAddress();
+            return new URL(String.format(PROFILE_URL, serverAddress, id));
         } catch (MalformedURLException e) {
             Log.e(TAG,"Created malformed URL",e);
             return null;

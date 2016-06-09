@@ -82,4 +82,5 @@
     <string name="updating_failed">Couldn\'t check for updates</string>
     <string name="attachment">attachment</string>
     <string name="title_activity_zoom">ZoomActivity</string>
+    <string name="serverAddress">Server address</string>
 </resources>

@@ -37,4 +37,8 @@ public class UpdateSettings {
         }
     }
 
+    public String getServerAddress() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPref.getString(SettingsActivity.SERVER_ADDRESS, "");
+    }
 }

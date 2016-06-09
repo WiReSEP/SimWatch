@@ -20,8 +20,8 @@ public class Types {
     public static final String PLOTTABLE_STR = "plottable";
     public static final String BOOLEAN_STR = "boolean";
     public static final String PLOT_REFERENCE_STR = "plotReference";
-    public static final String IMAGE_BINARY_STR = "binary:image";
-    public static final String NON_IMAGE_BINARY_STR = "binary:non_image";
+    public static final String IMAGE_BINARY_STR = "binary:image/*";
+    public static final String NON_IMAGE_BINARY_STR = "binary:*/*";
 
     public static Type getType(String str) {
         switch (str) {
@@ -81,6 +81,41 @@ public class Types {
                 return NON_IMAGE_BINARY_STR;
             default:
                 return "";
+        }
+    }
+
+    public static boolean isBinary(Type type) {
+        switch (type) {
+            case NUMBER:
+            case STRING:
+            case VECTOR:
+            case MATRIX:
+            case PLOTTABLE:
+            case BOOLEAN:
+            case PLOT_REFERENCE:
+                return false;
+            case IMAGE_BINARY:
+            case NON_IMAGE_BINARY:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public static String getMimeType(String typeName) {
+        if (isBinary(getType(typeName))) {
+            String[] split = typeName.split(":");
+            if (split.length != 2) {
+                return null;
+            }
+            String mimeType = split[1];
+            if (mimeType.matches("[\\-\\+\\.a-zA-Z0-9]*/[\\-\\+\\.a-zA-Z0-9]*") || mimeType.matches("[\\-\\+\\.a-zA-Z0-9]*/\\*")) {
+                return mimeType;
+            } else {
+                return null;
+            }
+        } else {
+            return null;
         }
     }
 

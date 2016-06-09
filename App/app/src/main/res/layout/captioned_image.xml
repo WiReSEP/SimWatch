@@ -5,8 +5,9 @@
     <ImageView
         android:id="@+id/captionedImage"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/attachment"/>
+        android:layout_height="match_parent"
+        android:contentDescription="@string/attachment"
+        android:scaleType="centerInside"/>
 
     <TextView
         android:id="@+id/caption"

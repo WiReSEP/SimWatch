@@ -53,6 +53,14 @@ public class ZoomableImageTouchListener implements View.OnTouchListener {
         movedMatrix = startingMatrix;
     }
 
+    public void center(ZoomableImageView imageView) {
+        startingMatrix = new Matrix();
+        startingMatrix.postScale(this.minScale, this.minScale);
+        startingMatrix.postTranslate((this.minX + maxX - width * minScale) / 2, (this.minY + maxY - height * minScale) / 2);
+        movedMatrix = startingMatrix;
+        imageView.setImageMatrix(movedMatrix);
+    }
+
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
 
