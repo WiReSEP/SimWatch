@@ -1,7 +1,7 @@
 package de.tu_bs.wire.simwatch;
 
 /**
- * Created by mw on 14.05.16.
+ * Basic implementation of a 2D float vector
  */
 public class Vec2f {
 

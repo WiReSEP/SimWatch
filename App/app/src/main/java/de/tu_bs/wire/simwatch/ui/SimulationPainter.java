@@ -134,7 +134,6 @@ public class SimulationPainter {
     }
 
     private ImageUpdater drawImageForAttachment(ViewGroup viewGroup, String name, File file, String mimeType) {
-        //todo draw image in appropriate size
         Log.d(TAG, "Drawing image '" + name + "'");
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View newLayout = inflater.inflate(R.layout.captioned_image, null);

@@ -18,7 +18,8 @@ import java.util.Map;
 import java.util.Scanner;
 
 /**
- * Created by mw on 22.03.16.
+ * Implementation of the ViewMemoryStorage using files in the private app directory to store
+ * information about what Instance Updates have been viewed locally
  */
 public class FileViewMemoryStorage extends ViewMemoryStorage {
 

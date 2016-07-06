@@ -9,7 +9,7 @@ import java.net.URL;
 import de.tu_bs.wire.simwatch.net.UpdateSettings;
 
 /**
- * Created by mw on 19.01.16.
+ * Class for building a URL for a single request retrieving a list of all available instances
  */
 public class InstanceListRequest {
 

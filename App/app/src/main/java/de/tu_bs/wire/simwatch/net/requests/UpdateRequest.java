@@ -12,11 +12,10 @@ import de.tu_bs.wire.simwatch.api.models.Update;
 import de.tu_bs.wire.simwatch.net.UpdateSettings;
 
 /**
- * Created by mw on 19.01.16.
+ * Class for building a URL for a single request retrieving all new updates for a simulation
+ * instance
  */
 public class UpdateRequest {
-
-    //dates are in ISO8601
 
     public static final String UPDATES_URL = "%s/instance/%s/updates/-1";
     public static final String NEW_UPDATES_URL = "%s/instance/%s/updates/%s";

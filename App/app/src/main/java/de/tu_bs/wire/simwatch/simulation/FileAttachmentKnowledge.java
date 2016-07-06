@@ -23,7 +23,8 @@ import java.util.Scanner;
 import de.tu_bs.wire.simwatch.api.models.Attachment;
 
 /**
- * Created by mw on 18.04.16.
+ * Implementation of the AttachmentKnowledge interface using files in the private app directory to
+ * store the information
  */
 public class FileAttachmentKnowledge implements AttachmentKnowledge {
 
@@ -147,10 +148,11 @@ public class FileAttachmentKnowledge implements AttachmentKnowledge {
     }
 
     @Override
-    public void removeAttachment(Attachment attachment) {
+    public boolean removeAttachment(Attachment attachment) {
+        boolean changed = false;
         if (attachment != null) {
             synchronized (attachment2Version) {
-                attachment2Version.remove(attachment);
+                changed = (attachment2Version.remove(attachment) != null);
             }
             synchronized (attachment2File) {
                 file2Attachment.remove(attachment2File.remove(attachment));
@@ -158,6 +160,7 @@ public class FileAttachmentKnowledge implements AttachmentKnowledge {
             writeLastModified();
             writeFileLocations();
         }
+        return changed;
     }
 
     @Override

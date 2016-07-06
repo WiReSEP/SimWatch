@@ -17,7 +17,8 @@ import java.util.Scanner;
 import de.tu_bs.wire.simwatch.api.models.Profile;
 
 /**
- * Created by mw on 26.02.16.
+ * Implements a local storage for Profiles by saving them into files in the private app directory.
+ * Each Profile has its own file
  */
 public class FileProfileStorage implements ProfileStorage {
 

@@ -9,10 +9,10 @@ import android.preference.PreferenceManager;
 import de.tu_bs.wire.simwatch.ui.activities.SettingsActivity;
 
 /**
- * Created by mw on 25.04.16.
+ * Provides access to settings regarding the network usage for updates as set by the user in the
+ * shared preferences
  */
 public class UpdateSettings {
-
 
     private Context context;
 

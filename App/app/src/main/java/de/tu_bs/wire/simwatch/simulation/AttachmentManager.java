@@ -17,7 +17,8 @@ import de.tu_bs.wire.simwatch.api.models.Attachment;
 import de.tu_bs.wire.simwatch.net.HTTPAttachmentProvider;
 
 /**
- * Created by mw on 18.04.16.
+ * Provides Access to all Attachments. Must be informed of all Attachment changes via its public
+ * methods or the Listener it implements. This class is a singleton
  */
 public class AttachmentManager implements AttachmentDownloadListener {
 
@@ -48,6 +49,12 @@ public class AttachmentManager implements AttachmentDownloadListener {
         file2tries = new HashMap<>();
     }
 
+    /**
+     * Returns the instance of the class
+     *
+     * @return The one and only AttachmentManager instance
+     * @throws IllegalStateException If the instance has not been created yet.
+     */
     public static AttachmentManager getInstance() {
         if (instance==null) {
             throw new IllegalStateException("AttachmentManager not initialized");
@@ -55,6 +62,13 @@ public class AttachmentManager implements AttachmentDownloadListener {
         return instance;
     }
 
+    /**
+     * Creates the singleton instance of AttachmentManager, if it doesn't exist already, and returns
+     * it
+     *
+     * @param context Application context
+     * @return The one and only AttachmentManager instance
+     */
     public static AttachmentManager getInstance(Context context) {
         if (instance == null) {
             instance = new AttachmentManager(context);
@@ -62,6 +76,14 @@ public class AttachmentManager implements AttachmentDownloadListener {
         return instance;
     }
 
+    /**
+     * Registers an AttachmentDownloadListener on the Manager that listens for download results for
+     * a single Attachment. Appropriate methods will be called on the listener whenever the Manager
+     * receives new information about the Attachment's download
+     *
+     * @param attachment The Attachment to register a listener for
+     * @param listener   The listener to be registered
+     */
     public void addAttachmentListener(Attachment attachment, AttachmentDownloadListener listener) {
         synchronized (listeners) {
             listeners.put(attachment, listener);
@@ -74,6 +96,12 @@ public class AttachmentManager implements AttachmentDownloadListener {
         }
     }
 
+    /**
+     * Deletes and removes all information about all Attachments that are not contained in the given
+     * Collection
+     *
+     * @param attachments Collection of all Attachments that should be kept
+     */
     public void removeAllExcept(Collection<Attachment> attachments) {
         Collection<Attachment> knownAttachments = attachmentKnowledge.getAllAttachments();
         for (Attachment knownAttachment : knownAttachments) {
@@ -83,6 +111,11 @@ public class AttachmentManager implements AttachmentDownloadListener {
         }
     }
 
+    /**
+     * Deletes and removes all information about a single Attachment
+     *
+     * @param attachment Identifier of the Attachment to be deleted
+     */
     private void removeAttachment(Attachment attachment) {
         File file = attachmentKnowledge.getFile(attachment);
         if (file != null && file.exists()) {
@@ -96,12 +129,23 @@ public class AttachmentManager implements AttachmentDownloadListener {
         }
     }
 
+    /**
+     * Unregisters all AttachmentDownloadListeners from the Manager
+     */
     public void removeAllListeners() {
         synchronized (listeners) {
             listeners.clear();
         }
     }
 
+    /**
+     * Downloads and from now on stored information about the given Attachment, if the Attachment is
+     * not downloaded already or the downloaded version of the Attachment differs from the newest
+     * version
+     *
+     * @param attachment Identifier of the Attachment to be downloaded
+     * @param newestVersionID Version String of the newest version if the Attachment
+     */
     public void download(Attachment attachment, String newestVersionID) {
         if (attachment == null) {
             throw new NullPointerException("attachment is null");
@@ -120,6 +164,12 @@ public class AttachmentManager implements AttachmentDownloadListener {
         }
     }
 
+    /**
+     * Get the file that the given Attachment should be stored in
+     *
+     * @param attachment Identifier of the Attachment in question
+     * @return The Attachment's file location
+     */
     public File fileFromAttachmentName(Attachment attachment) {
         return fileFromAttachmentName(attachment, 0);
     }
@@ -140,7 +190,7 @@ public class AttachmentManager implements AttachmentDownloadListener {
         return attachment.getInstanceID() + "_" + i + "_" + attachment.getAttachmentName();
     }
 
-    public void onFileChanged(File file, String newVersion) {
+    private void onFileChanged(File file, String newVersion) {
         if (file == null) {
             throw new NullPointerException("file is null");
         }
@@ -158,6 +208,12 @@ public class AttachmentManager implements AttachmentDownloadListener {
         }
     }
 
+    /**
+     * Downloads the given Attachment to the given file location
+     *
+     * @param attachment Identifier of the Attachment to be downloaded
+     * @param file The desired file location
+     */
     private void download(Attachment attachment, File file) {
         new HTTPAttachmentProvider(this, context).download(attachment, file);
     }
@@ -217,6 +273,13 @@ public class AttachmentManager implements AttachmentDownloadListener {
         retry(file, true);
     }
 
+    /**
+     * Retries downloading the Attachment corresponding to the given file a couple of times or
+     * indefinitely, if force is true
+     *
+     * @param file The file corresponding to the Attachment
+     * @param force Whether the download should be retried indefinitely
+     */
     private void retry(final File file, boolean force) {
         Integer tries = file2tries.get(file);
         if (tries == null) {
@@ -224,11 +287,11 @@ public class AttachmentManager implements AttachmentDownloadListener {
         }
         if (tries < retryTimes.length || force) {
             file2tries.put(file, tries + 1);
-            final Integer finalTries = Math.min(tries, retryTimes.length - 1);
+            final Integer triesSoFar = Math.min(tries, retryTimes.length - 1);
             new Thread() {
                 public void run() {
                     try {
-                        Thread.sleep(retryTimes[finalTries]);
+                        Thread.sleep(retryTimes[triesSoFar]);
                         Attachment attachment = attachmentKnowledge.getAttachment(file);
                         if (attachment == null) {
                             failDownloading(file);
@@ -246,6 +309,11 @@ public class AttachmentManager implements AttachmentDownloadListener {
         }
     }
 
+    /**
+     * Stops retrying to download the Attachment corresponding to the given file
+     *
+     * @param file The file corresponding to the Attachment
+     */
     private void failDownloading(File file) {
         Attachment attachment = attachmentKnowledge.getAttachment(file);
         File original = attachmentKnowledge.getFile(attachment);

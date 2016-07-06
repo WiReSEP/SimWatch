@@ -17,7 +17,8 @@ import java.util.Scanner;
 import de.tu_bs.wire.simwatch.api.models.Instance;
 
 /**
- * Created by mw on 27.01.16.
+ * Implementation of the SimulationStorage Interface using files in the private app directory to
+ * store simulation Instances locally
  */
 public class FileSimulationStorage implements SimulationStorage {
 

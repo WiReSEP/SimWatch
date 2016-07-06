@@ -12,7 +12,8 @@ import java.net.URL;
 import de.tu_bs.wire.simwatch.net.UpdateSettings;
 
 /**
- * Created by mw on 22.03.16.
+ * Class for building a URL for a single request deleting an instance as well as all its updates and
+ * attachments
  */
 public class DeleteRequest {
 

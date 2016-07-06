@@ -5,18 +5,15 @@
     <ImageView
         android:id="@+id/captionedImage"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:contentDescription="@string/attachment"
-        android:scaleType="centerInside"/>
+        android:scaleType="centerInside"
+        android:src="@drawable/attachment"/>
 
     <TextView
         android:id="@+id/caption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/captionedImage"
-        android:layout_alignLeft="@+id/captionedImage"
-        android:layout_alignRight="@+id/captionedImage"
-        android:layout_alignTop="@+id/captionedImage"
         android:layout_below="@+id/captionedImage"
         android:layout_margin="1dp"
         android:gravity="center"
