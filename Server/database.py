@@ -10,6 +10,8 @@ PROFILE = 'profile'
 DATE = 'date'
 UPDATES = 'updates'
 ID = '_id'
+STATUS = 'status'
+ERROR = 'error'
 
 
 class DataBase:
@@ -48,6 +50,10 @@ class DataBase:
     def get_all_instance_ids(self):
         logger.info('getting all instance ids...')
         return self.instances.find({}, {ID: 1})
+
+    def get_all_instance_status(self):
+        logger.info('getting all instance status...')
+        return self.instances.find({}, {ID: 1, STATUS: 1, ERROR:1})
 
     def insert_profile(self, profile):
         logger.info('inserting profile: ' + str(profile))

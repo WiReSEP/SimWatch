@@ -58,7 +58,7 @@ def send_update(instance_id):
 
 @_app.route('/instance/<instance_id>/attachment/<property_name>', methods=['POST'])
 def upload_attachment(instance_id, property_name):
-    logger.debug('receiving attachement \'' + property_name + '\' for instance ' + instance_id)
+    logger.debug('receiving attachment \'' + property_name + '\' for instance ' + instance_id)
     attachment = Attachment(instance_id, property_name, request)
     if attachment.save():
         status = 200
@@ -69,7 +69,7 @@ def upload_attachment(instance_id, property_name):
 
 @_app.route('/instance/<instance_id>/attachment/<property_name>', methods=['GET'])
 def load_attachment(instance_id, property_name):
-    logger.debug('serving attachement \'' + property_name + '\' for instance ' + instance_id)
+    logger.debug('serving attachment \'' + property_name + '\' for instance ' + instance_id)
     attachment = Attachment(instance_id, property_name, request)
     generator = attachment.load()
     if generator is not None:
@@ -78,17 +78,38 @@ def load_attachment(instance_id, property_name):
         return Response(attachment.json_status, mimetype=_JSON_MIME, status=404)
 
 
+@_app.route('/instance/<instance_id>/status', methods=['GET'])
+def get_status(instance_id):
+    instancee = Instance(id=instance_id)
+    if not instancee.is_valid():
+        return Response(to_json(None), mimetype=_JSON_MIME, status=404)
+    return Response(to_json(instancee.get_status()), mimetype=_JSON_MIME)
+
+
+@_app.route('/instance/<instance_id>/status', methods=['POST'])
+def send_status(instance_id):
+    post_params = request.get_json()
+    instancee = Instance(id=instance_id)
+    if not instancee.is_valid():
+        return Response(to_json(None), mimetype=_JSON_MIME, status=404)
+    status = 200 if instancee.set_status(post_params.get('status'), post_params.get('error')) else 422
+    return Response(to_json(None), mimetype=_JSON_MIME, status=status)
+
+
 @_app.route('/instance', methods=['GET'])
-def get_instances():
-    logger.info('getting all instances...')
-    cursor = _db.get_all_instances()
-    list = cursor_to_list(cursor)
-    return Response(to_json(list), mimetype=_JSON_MIME)
+def get_instances_status():
+    logger.info('getting id from every instance...')
+    cursor = _db.get_all_instance_status()
+    return Response(to_json([{
+                                 database.ID: doc.get(database.ID),
+                                 database.STATUS: doc.get(database.STATUS),
+                                 database.ERROR: doc.get(database.ERROR)
+                             } for doc in cursor]), mimetype=_JSON_MIME)
 
 
 @_app.route('/instance/ids', methods=['GET'])
 def get_instances_id():
-    logger.info('gettting id from every instance...')
+    logger.info('getting id from every instance...')
     cursor = _db.get_all_instance_ids()
     id_list = []
     for doc in cursor:

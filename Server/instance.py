@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json, logging, datetime, database
 from log import logger
+from enum import Enum
 from bson import json_util
 from pymongoencoder import PyMongoEncoder
 
@@ -10,6 +11,14 @@ DATE = 'date'
 UPDATES = 'updates'
 PROFILE_ID = 'profile_id'
 UPDATE_ID = 'update_id'
+STATUS = 'status'
+ERROR = 'error'
+
+
+class PossibleStates(Enum):
+    RUNNING = 'RUNNING'
+    STOPPED = 'STOPPED'
+    FAILED = 'FAILED'
 
 
 class Instance():
@@ -37,10 +46,11 @@ class Instance():
             self.dict_instance[DATE] = datetime.datetime.now()
             self.dict_instance[UPDATES] = []
             self.dict_instance[PROFILE_ID] = profile_id
+            self.dict_instance[STATUS] = PossibleStates.RUNNING.value
+            self.dict_instance[ERROR] = None
             logger.info('created instance...')
             logger.info(NAME + ": " + self.dict_instance[NAME])
             logger.info(PROFILE + ": " + str(self.dict_instance[PROFILE]))
-
 
     def update(self, update):
         dict_update = json.loads(update)
@@ -69,6 +79,19 @@ class Instance():
                 latest_updates.append(updates[i])
         logger.debug('returning following updates: ' + str(latest_updates))
         return latest_updates
+
+    def is_valid(self):
+        return self.dict_instance is not None
+
+    def get_status(self):
+        return {STATUS: self.dict_instance.get(STATUS), ERROR: self.dict_instance.get(ERROR)}
+
+    def set_status(self, value, error = None):
+        if not value in [p.value for p in PossibleStates]:
+            return False
+        self.dict_instance[STATUS] = value
+        self.dict_instance[ERROR] = error
+        return True
 
     @property
     def json_instance(self):
