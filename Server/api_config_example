@@ -1,5 +1,10 @@
-host: 127.0.0.1
+# Listen on all interfaces on port 5000
+host: 0.0.0.0
 port: 5000
+
+# Database configuration
 mongo_host: 127.0.0.1
 mongo_port: 27017
-mongo_name: testdatenbank
+
+# Database name which should be used (change if there are conflicts with existing databases)
+mongo_name: simwatch
