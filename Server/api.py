@@ -10,8 +10,7 @@ from attachment import Attachment
 from pymongoencoder import PyMongoEncoder
 from dateutil import parser
 
-_FLASK_NAME = 'flask_import_name'
-_app = Flask(_FLASK_NAME)
+app = Flask(__name__)
 NAME = 'name'
 PROFILE = 'profile'
 UPDATES = 'updates'
@@ -21,7 +20,7 @@ _TEXT_MIME = 'text/xml'
 _BINARY_MIME = 'application/octet-stream'
 
 
-@_app.route('/instance', methods=['POST'])
+@app.route('/instance', methods=['POST'])
 def post_instance():
     logger.debug('post_instance with following json: ' + str(request.get_json()))
     instancee = Instance(dict=request.get_json())
@@ -29,7 +28,7 @@ def post_instance():
     return Response(instancee.json_instance, mimetype=_JSON_MIME)
 
 
-@_app.route('/instance/delete', methods=['POST'])
+@app.route('/instance/delete', methods=['POST'])
 def delete_instance():
     dict_id = request.get_json()
     id = dict_id["_id"]
@@ -38,7 +37,7 @@ def delete_instance():
     return Response(_db.delete_instance(id), mimetype=_TEXT_MIME)
 
 
-@_app.route('/instance/<instance_id>/updates/<update_id>', methods=['GET'])
+@app.route('/instance/<instance_id>/updates/<update_id>', methods=['GET'])
 def get_latest_updates(instance_id, update_id):
     logger.info('getting latest updates since update ' + update_id)
     instancee = Instance(id=instance_id)
@@ -47,7 +46,7 @@ def get_latest_updates(instance_id, update_id):
     return Response(updates, mimetype=_JSON_MIME)
 
 
-@_app.route('/instance/<instance_id>/updates', methods=['POST'])
+@app.route('/instance/<instance_id>/updates', methods=['POST'])
 def send_update(instance_id):
     logger.debug('posting update: ' + json_util.dumps(request.get_json()))
     instancee = Instance(id=instance_id)
@@ -56,7 +55,7 @@ def send_update(instance_id):
     return Response(instancee.json_instance, mimetype=_JSON_MIME)
 
 
-@_app.route('/instance/<instance_id>/attachment/<property_name>', methods=['POST'])
+@app.route('/instance/<instance_id>/attachment/<property_name>', methods=['POST'])
 def upload_attachment(instance_id, property_name):
     logger.debug('receiving attachment \'' + property_name + '\' for instance ' + instance_id)
     attachment = Attachment(instance_id, property_name, request)
@@ -67,7 +66,7 @@ def upload_attachment(instance_id, property_name):
     return Response(attachment.json_status, mimetype=_JSON_MIME, status=status)
 
 
-@_app.route('/instance/<instance_id>/attachment/<property_name>', methods=['GET'])
+@app.route('/instance/<instance_id>/attachment/<property_name>', methods=['GET'])
 def load_attachment(instance_id, property_name):
     logger.debug('serving attachment \'' + property_name + '\' for instance ' + instance_id)
     attachment = Attachment(instance_id, property_name, request)
@@ -78,7 +77,7 @@ def load_attachment(instance_id, property_name):
         return Response(attachment.json_status, mimetype=_JSON_MIME, status=404)
 
 
-@_app.route('/instance/<instance_id>/status', methods=['GET'])
+@app.route('/instance/<instance_id>/status', methods=['GET'])
 def get_status(instance_id):
     instancee = Instance(id=instance_id)
     if not instancee.is_valid():
@@ -86,7 +85,7 @@ def get_status(instance_id):
     return Response(to_json(instancee.get_status()), mimetype=_JSON_MIME)
 
 
-@_app.route('/instance/<instance_id>/status', methods=['POST'])
+@app.route('/instance/<instance_id>/status', methods=['POST'])
 def send_status(instance_id):
     post_params = request.get_json()
     instancee = Instance(id=instance_id)
@@ -96,7 +95,7 @@ def send_status(instance_id):
     return Response(to_json(None), mimetype=_JSON_MIME, status=status)
 
 
-@_app.route('/instance', methods=['GET'])
+@app.route('/instance', methods=['GET'])
 def get_instances_status():
     logger.info('getting id from every instance...')
     cursor = _db.get_all_instance_status()
@@ -107,7 +106,7 @@ def get_instances_status():
                              } for doc in cursor]), mimetype=_JSON_MIME)
 
 
-@_app.route('/instance/ids', methods=['GET'])
+@app.route('/instance/ids', methods=['GET'])
 def get_instances_id():
     logger.info('getting id from every instance...')
     cursor = _db.get_all_instance_ids()
@@ -117,7 +116,7 @@ def get_instances_id():
     return Response(to_json(id_list), mimetype=_JSON_MIME)
 
 
-@_app.route('/instance/<id>/<date>', methods=['GET'])
+@app.route('/instance/<id>/<date>', methods=['GET'])
 def get_instance_since(id, date):
     logger.info('getting every update from %s since %s', id, date)
     cursor = _db.get_instance(id)
@@ -129,14 +128,14 @@ def get_instance_since(id, date):
     return Response(to_json(update_list), mimetype=_JSON_MIME)
 
 
-@_app.route('/instance/<id>', methods=['GET'])
+@app.route('/instance/<id>', methods=['GET'])
 def get_instance(id):
     logger.info('getting instance: ' + id)
     cursor = _db.get_instance(id)
     return Response(to_json(cursor), mimetype=_JSON_MIME)
 
 
-@_app.route('/profile/<id>', methods=['GET'])
+@app.route('/profile/<id>', methods=['GET'])
 def get_profile(id):
     logger.info('getting profile: ' + id)
     cursor = _db.get_profile(id)
@@ -156,4 +155,6 @@ def cursor_to_list(cursor):
 
 
 config = ApiConfig()
-_app.run(debug=True, host=config.host, port=config.port)
+
+if __name__ == '__main__':
+    app.run(debug=True, host=config.host, port=config.port)
