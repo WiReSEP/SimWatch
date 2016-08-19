@@ -2,13 +2,14 @@ package de.tu_bs.wire.simwatch.api.models;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import de.tu_bs.wire.simwatch.api.types.Types;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import de.tu_bs.wire.simwatch.api.types.Types;
 
 public class Instance {
     @SerializedName("_id")
@@ -17,7 +18,8 @@ public class Instance {
     @SerializedName("profile_id")
     private String profileID;
     private Profile profile;
-
+    private Status status;
+    private Error error;
     /**
      * List of all known updates in chronological order
      */
@@ -26,7 +28,7 @@ public class Instance {
     public Instance(String name, Profile profile) {
         this.name = name;
         this.profile = profile;
-        //fixme inconsistent initialization; ID? profileID?
+        // unregistered instance, there is no ID or profileID at this point
     }
 
     public Instance(String ID, String name, String profileID) {
@@ -120,6 +122,22 @@ public class Instance {
         return profileID;
     }
 
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public Error getError() {
+        return error;
+    }
+
+    public void setError(Error error) {
+        this.error = error;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -169,6 +187,68 @@ public class Instance {
         } else {
             return updates;
         }
+    }
+
+    public enum Status {
+        /**
+         * Simulation is running normally
+         */
+        RUNNING,
+        /**
+         * Simulation is completed and shut down
+         */
+        STOPPED,
+        /**
+         * Simulation crashed or failed for other reasons
+         *
+         * @see Error
+         */
+        FAILED
+    }
+
+    /**
+     * Represents an unrecoverable error that occurred during the execution of
+     * the simulation instance.
+     */
+    public static class Error {
+        private String message;
+
+        private String stackTrace;
+
+
+        public Error(String message, Throwable throwable) {
+            this.message = message;
+            if (throwable != null) {
+                this.stackTrace = getStackTrace(throwable);
+            }
+        }
+
+        private static String getStackTrace(Throwable throwable) {
+            StringWriter stringWriter = new StringWriter();
+            throwable.printStackTrace(new PrintWriter(stringWriter));
+            return stringWriter.toString();
+        }
+
+        /**
+         * User-specified error message
+         *
+         * @return Error message. May be <code>null</code>
+         */
+        public String getMessage() {
+            return message;
+        }
+
+        /**
+         * If the user supplied a <code>Throwable</code>, this method
+         * returns the entire stack trace as string.
+         *
+         * @return Stack trace if there is one or <code>null</code>
+         * @see Throwable#printStackTrace()
+         */
+        public String getStackTrace() {
+            return stackTrace;
+        }
+
     }
 
 }
