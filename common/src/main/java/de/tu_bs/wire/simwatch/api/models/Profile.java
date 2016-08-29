@@ -1,6 +1,5 @@
 package de.tu_bs.wire.simwatch.api.models;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
@@ -8,6 +7,7 @@ import com.google.gson.annotations.SerializedName;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.tu_bs.wire.simwatch.api.GsonUtil;
 import de.tu_bs.wire.simwatch.api.types.Types;
 
 /**
@@ -28,7 +28,7 @@ public class Profile {
     }
 
     public static Profile fromString(String str) {
-        return new Gson().fromJson(str, Profile.class);
+        return GsonUtil.getGson().fromJson(str, Profile.class);
     }
 
     public String getID() {

@@ -1,15 +1,18 @@
 package de.tu_bs.wire.simwatch.api.models;
 
-import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import de.tu_bs.wire.simwatch.api.types.Types;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import de.tu_bs.wire.simwatch.api.GsonUtil;
+import de.tu_bs.wire.simwatch.api.HashUtil;
+import de.tu_bs.wire.simwatch.api.types.Types;
 
 public class Instance {
     @SerializedName("_id")
@@ -24,6 +27,9 @@ public class Instance {
      * List of all known updates in chronological order
      */
     private List<Update> updates;
+
+    @SerializedName("date")
+    private Date dateOfCreation;
 
     public Instance(String name, Profile profile) {
         this.name = name;
@@ -46,7 +52,7 @@ public class Instance {
     }
 
     public static Instance fromString(String str) {
-        return new Gson().fromJson(str, Instance.class);
+        return GsonUtil.getGson().fromJson(str, Instance.class);
     }
 
     public String getName() {
@@ -55,6 +61,15 @@ public class Instance {
 
     public String getID() {
         return ID;
+    }
+
+    /**
+     * Calculates a 5 character hash of the id
+     *
+     * @return a 20-bit hex hash of the id (5 characters)
+     */
+    public String getShortenedID() {
+        return HashUtil.shorten(ID);
     }
 
     /**
@@ -189,6 +204,18 @@ public class Instance {
         }
     }
 
+    public Update getLastUpdate() {
+        if (getNumberOfUpdates() > 0) {
+            return getUpdates().get(getNumberOfUpdates() - 1);
+        } else {
+            return null;
+        }
+    }
+
+    public Date getDateOfCreation() {
+        return dateOfCreation;
+    }
+
     public enum Status {
         /**
          * Simulation is running normally
@@ -250,5 +277,4 @@ public class Instance {
         }
 
     }
-
 }
