@@ -43,7 +43,7 @@ class Instance():
                 profile_id = profile_dict[database.ID]
                 logger.info('profile existed already. Id: ' + str(profile_id))
 
-            self.dict_instance[DATE] = datetime.datetime.now(datetime.timezone.utc)
+            self.dict_instance[DATE] = datetime.datetime.now()
             self.dict_instance[UPDATES] = []
             self.dict_instance[PROFILE_ID] = profile_id
             self.dict_instance[STATUS] = PossibleStates.RUNNING.value
@@ -54,7 +54,7 @@ class Instance():
 
     def update(self, update):
         dict_update = json.loads(update)
-        dict_update[DATE] = datetime.datetime.now(datetime.timezone.utc)
+        dict_update[DATE] = datetime.datetime.now()
         dict_update[UPDATE_ID] = (len(self.dict_instance[UPDATES]) + 1)
         if self.dict_instance is not None:
             logger.debug('Update to insert: ' + str(update))
