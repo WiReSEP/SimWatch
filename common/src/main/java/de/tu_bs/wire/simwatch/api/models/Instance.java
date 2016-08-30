@@ -221,6 +221,16 @@ public class Instance {
         return dateOfCreation;
     }
 
+    public boolean applyStatus(InstanceStatus instanceStatus) {
+        if (status != null && !status.equals(instanceStatus.getStatus()) || error != null && !error.equals(instanceStatus.getError())) {
+            status = instanceStatus.getStatus();
+            error = instanceStatus.getError();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public enum Status {
         /**
          * Simulation is running normally
@@ -259,6 +269,23 @@ public class Instance {
             StringWriter stringWriter = new StringWriter();
             throwable.printStackTrace(new PrintWriter(stringWriter));
             return stringWriter.toString();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Error)) return false;
+
+            Error error = (Error) o;
+
+            return message != null ? message.equals(error.message) : error.message == null && (stackTrace != null ? stackTrace.equals(error.stackTrace) : error.stackTrace == null);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = message != null ? message.hashCode() : 0;
+            result = 31 * result + (stackTrace != null ? stackTrace.hashCode() : 0);
+            return result;
         }
 
         /**

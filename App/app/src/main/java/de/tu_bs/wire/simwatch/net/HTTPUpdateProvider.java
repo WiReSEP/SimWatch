@@ -13,11 +13,15 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import de.tu_bs.wire.simwatch.api.GsonUtil;
 import de.tu_bs.wire.simwatch.api.models.Instance;
+import de.tu_bs.wire.simwatch.api.models.InstanceStatus;
 import de.tu_bs.wire.simwatch.api.models.Update;
+import de.tu_bs.wire.simwatch.net.requests.StatusUpdateRequest;
 import de.tu_bs.wire.simwatch.net.requests.UpdateRequest;
 import de.tu_bs.wire.simwatch.simulation.UpdateListener;
 
@@ -48,8 +52,8 @@ public class HTTPUpdateProvider extends UpdateProvider {
         new Thread() {
             @Override
             public void run() {
-                Collection<String> updatedInstances = new ArrayList<>();
-                Collection<String> erroneousUpdates = new ArrayList<>();
+                Set<String> updatedInstances = new HashSet<>();
+                Set<String> erroneousUpdates = new HashSet<>();
                 for (Instance sim : sims) {
                     UpdateRequest updateRequest = new UpdateRequest(context, sim);
                     URL url = updateRequest.getURL();
@@ -61,7 +65,7 @@ public class HTTPUpdateProvider extends UpdateProvider {
 
                             if (response.isSuccessful()) {
                                 String responseString = response.body().string();
-                                Update responseArray[] = new Update[0];
+                                Update responseArray[];
                                 try {
                                     responseArray = GsonUtil.getGson().fromJson(responseString, Update[].class);
                                     List<Update> updates = Arrays.asList(responseArray);
@@ -79,6 +83,36 @@ public class HTTPUpdateProvider extends UpdateProvider {
                             }
                         } catch (IOException e) {
                             Log.e(TAG, "Cannot retrieve new Updates for '" + sim.getID(), e);
+                            erroneousUpdates.add(sim.getID());
+                        }
+                    }
+                    StatusUpdateRequest statusUpdateRequest = new StatusUpdateRequest(context, sim);
+                    URL statusUrl = statusUpdateRequest.getURL();
+                    if (statusUrl != null) {
+                        Request request = new Request.Builder().url(statusUrl).build();
+                        Response response;
+                        try {
+                            response = client.newCall(request).execute();
+
+                            if (response.isSuccessful()) {
+                                String responseString = response.body().string();
+                                InstanceStatus instanceStatus;
+                                try {
+                                    instanceStatus = GsonUtil.getGson().fromJson(responseString, InstanceStatus.class);
+                                    if (applyStatusUpdate(sim, instanceStatus) && !erroneousUpdates.contains(sim.getID())) {
+                                        updatedInstances.add(sim.getID());
+                                    }
+                                } catch (JsonSyntaxException e) {
+                                    Log.e(TAG, "Received status update for '" + sim.getID() + "' with broken syntax", e);
+                                    erroneousUpdates.add(sim.getID());
+                                }
+                            } else {
+                                Log.e(TAG, "Cannot retrieve status update for '" + sim.getID() + "'. Failed with HTTP status code " + response.code());
+                                Log.d(TAG, "Request was " + request.urlString());
+                                erroneousUpdates.add(sim.getID());
+                            }
+                        } catch (IOException e) {
+                            Log.e(TAG, "Cannot retrieve status update for '" + sim.getID(), e);
                             erroneousUpdates.add(sim.getID());
                         }
                     }

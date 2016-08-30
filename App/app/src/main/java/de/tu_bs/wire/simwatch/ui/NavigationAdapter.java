@@ -49,8 +49,7 @@ public class NavigationAdapter extends ArrayAdapter<NavigationItem> {
         View v = convertView;
 
         if (v == null) {
-            LayoutInflater vi;
-            vi = LayoutInflater.from(getContext());
+            LayoutInflater vi = LayoutInflater.from(getContext());
             v = vi.inflate(R.layout.nav_item, null);
         }
 

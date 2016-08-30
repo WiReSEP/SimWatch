@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import de.tu_bs.wire.simwatch.api.models.Instance;
+import de.tu_bs.wire.simwatch.api.models.InstanceStatus;
 import de.tu_bs.wire.simwatch.api.models.Update;
 import de.tu_bs.wire.simwatch.simulation.UpdateListener;
 
@@ -28,6 +29,10 @@ public abstract class UpdateProvider {
 
     protected boolean applyUpdates(Instance simulation, List<Update> updates) {
         return simulation.addAll(updates);
+    }
+
+    protected boolean applyStatusUpdate(Instance simulation, InstanceStatus status) {
+        return simulation.applyStatus(status);
     }
 
 }

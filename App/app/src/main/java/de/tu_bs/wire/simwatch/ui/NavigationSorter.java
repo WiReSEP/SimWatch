@@ -16,6 +16,7 @@ public class NavigationSorter implements Comparator<NavigationItem> {
     private final List<SortElement> sortOrder = new ArrayList<>();
 
     public NavigationSorter() {
+        addSort(SortElement.STATUS_DESC);
         addSort(SortElement.NEW_UPDATES_DESC);
         addSort(SortElement.NAME_ASC);
     }
