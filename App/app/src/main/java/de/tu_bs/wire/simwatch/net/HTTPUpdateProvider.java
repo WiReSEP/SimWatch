@@ -3,7 +3,6 @@ package de.tu_bs.wire.simwatch.net;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -16,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import de.tu_bs.wire.simwatch.api.GsonUtil;
 import de.tu_bs.wire.simwatch.api.models.Instance;
 import de.tu_bs.wire.simwatch.api.models.Update;
 import de.tu_bs.wire.simwatch.net.requests.UpdateRequest;
@@ -63,13 +63,14 @@ public class HTTPUpdateProvider extends UpdateProvider {
                                 String responseString = response.body().string();
                                 Update responseArray[] = new Update[0];
                                 try {
-                                    responseArray = new Gson().fromJson(responseString, Update[].class);
+                                    responseArray = GsonUtil.getGson().fromJson(responseString, Update[].class);
+                                    List<Update> updates = Arrays.asList(responseArray);
+                                    if (applyUpdates(sim, updates)) {
+                                        updatedInstances.add(sim.getID());
+                                    }
                                 } catch (JsonSyntaxException e) {
                                     Log.e(TAG, "Received Update for '" + sim.getID() + "' with broken syntax", e);
-                                }
-                                List<Update> updates = Arrays.asList(responseArray);
-                                if (applyUpdates(sim, updates)) {
-                                    updatedInstances.add(sim.getID());
+                                    erroneousUpdates.add(sim.getID());
                                 }
                             } else {
                                 Log.e(TAG, "Cannot retrieve new Updates for '" + sim.getID() + "'. Failed with HTTP status code " + response.code());

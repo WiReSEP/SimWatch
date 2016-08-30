@@ -1,13 +1,14 @@
 package de.tu_bs.wire.simwatch.ui;
 
-import android.view.Menu;
-import android.view.MenuItem;
+import android.content.Context;
+import android.widget.ListView;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
+import de.tu_bs.wire.simwatch.R;
 import de.tu_bs.wire.simwatch.api.models.Instance;
 import de.tu_bs.wire.simwatch.simulation.ViewMemory;
 
@@ -18,9 +19,11 @@ import de.tu_bs.wire.simwatch.simulation.ViewMemory;
 public class MenuCreator {
 
     private static final String TAG = "MenuCreator";
-    private Map<MenuItem, Instance> map;
+    private Map<Long, Instance> map;
+    private Context context;
 
-    public MenuCreator() {
+    public MenuCreator(Context context) {
+        this.context = context;
         map = new HashMap<>();
     }
 
@@ -28,50 +31,57 @@ public class MenuCreator {
      * Puts an item into the given menu for each given Instance and remembers the MenuItems added
      * until this method is called again
      *
-     * @param menu      The menu to populate
-     * @param instances The Instances to populate the Menu with
+     * @param listView  The menu to populate
+     * @param instances The Instances to populate the list with
      */
-    public void populateSimulationMenu(Menu menu, Collection<Instance> instances, ViewMemory viewMemory) {
+    public void populateSimulationList(ListView listView, Collection<Instance> instances, ViewMemory viewMemory) {
         map.clear();
-        menu.clear();
 
+        NavigationItem[] entries = new NavigationItem[instances.size()];
+
+        Map<NavigationItem, Instance> item2instance = new HashMap<>();
+        int counter = 0;
         for (Instance instance : instances) {
-            MenuItem menuItem = menu.add(getMenuEntry(instance, viewMemory));
-            map.put(menuItem, instance);
+            entries[counter] = getMenuEntry(instance, viewMemory);
+            item2instance.put(entries[counter], instance);
+            counter++;
         }
+        Arrays.sort(entries, new NavigationSorter());
+        for (int i = 0; i < entries.length; i++) {
+            map.put((long) i, item2instance.get(entries[i]));
+        }
+        listView.setAdapter(new NavigationAdapter(context, R.layout.nav_item, entries));
     }
 
-    private String getMenuEntry(Instance instance, ViewMemory viewMemory) {
+    private NavigationItem getMenuEntry(Instance instance, ViewMemory viewMemory) {
         int notViewed = viewMemory.getNotViewed(instance);
-        String entry;
-        if (notViewed > 0) {
-            entry = String.format(Locale.getDefault(), "%s (%d)", instance.getName(), notViewed);
+        if (instance.getLastUpdate() == null) {
+            return new NavigationItem(instance.getName(), instance.getID(), notViewed, instance.getDateOfCreation(), null, instance.getStatus());
         } else {
-            entry = instance.getName();
+            return new NavigationItem(instance.getName(), instance.getID(), notViewed, instance.getDateOfCreation(), instance.getLastUpdate().getDateOfCreation(), instance.getStatus());
         }
-        return entry;
     }
 
     /**
      * Retrieves the Instance that corresponds to the given MenuItem in the Menu most recently
      * populated by this MenuCreator
      *
-     * @param menuItem The MenuItem to search for
+     * @param position The position of the list item to search for
      * @return The corresponding Instance or null, if the given MenuItem does not belong to the
-     * MenuItems created by populateSimulationMenu
+     * MenuItems created by populateSimulationList
      */
-    public Instance getInstanceChosen(MenuItem menuItem) {
-        return map.get(menuItem);
+    public Instance getInstanceChosen(long position) {
+        return map.get(position);
     }
 
     /**
-     * Checks if the given MenuItem was created by populateSimulationMenu
+     * Checks if the given MenuItem was created by populateSimulationList
      *
-     * @param menuItem The item in question
-     * @return true, if the item was created by populateSimulationMenu or false otherwise
+     * @param position The item in question
+     * @return true, if the item was created by populateSimulationList or false otherwise
      */
-    public boolean hasItem(MenuItem menuItem) {
-        return map.containsKey(menuItem);
+    public boolean hasItem(long position) {
+        return map.containsKey(position);
     }
 
 }

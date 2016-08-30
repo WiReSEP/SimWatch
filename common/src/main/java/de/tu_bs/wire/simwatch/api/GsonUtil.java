@@ -19,7 +19,8 @@ public class GsonUtil {
     }
 
     public static GsonBuilder getBuilder(GsonBuilder gsonBuilder) {
-        gsonBuilder.setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        gsonBuilder.setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        //modify GsonBuilder with required TypeAdapters
         return gsonBuilder;
     }
 

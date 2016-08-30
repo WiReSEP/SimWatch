@@ -31,7 +31,7 @@ public interface ProfileStorage {
      *
      * @return A Collection of all profiles currently saved
      */
-    Collection<Profile> readAllInstances();
+    Collection<Profile> readAllProfiles();
 
     /**
      * Removes a single Profile identified by the given id from the local storage, or does nothing

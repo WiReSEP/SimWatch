@@ -5,7 +5,6 @@ import android.util.Log;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 
 import de.tu_bs.wire.simwatch.api.models.Instance;
 import de.tu_bs.wire.simwatch.api.models.Update;
@@ -31,11 +30,10 @@ public class UpdateRequest {
 
     public URL getURL() {
         String id = instance.getID();
-        List<Update> updates = instance.getUpdates();
         try {
             String serverAddress = new UpdateSettings(context).getServerAddress();
-            if (!updates.isEmpty()) {
-                Update lastUpdate = updates.get(updates.size() - 1);
+            if (instance.getNumberOfUpdates() > 0) {
+                Update lastUpdate = instance.getLastUpdate();
                 String lastUpdateID = lastUpdate.getID();
                 return new URL(String.format(NEW_UPDATES_URL, serverAddress, id, lastUpdateID));
             } else {

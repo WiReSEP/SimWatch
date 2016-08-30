@@ -1,5 +1,4 @@
 package de.tu_bs.wire.simwatch.ui.listeners;
-
 import android.graphics.Matrix;
 import android.util.Log;
 import android.view.MotionEvent;

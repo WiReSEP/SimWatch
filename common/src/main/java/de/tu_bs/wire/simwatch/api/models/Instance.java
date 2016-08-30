@@ -1,5 +1,6 @@
 package de.tu_bs.wire.simwatch.api.models;
 
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.PrintWriter;
@@ -52,7 +53,11 @@ public class Instance {
     }
 
     public static Instance fromString(String str) {
-        return GsonUtil.getGson().fromJson(str, Instance.class);
+        try {
+            return GsonUtil.getGson().fromJson(str, Instance.class);
+        } catch (JsonSyntaxException e) {
+            return null;
+        }
     }
 
     public String getName() {

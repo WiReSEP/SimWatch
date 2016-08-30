@@ -3,7 +3,6 @@ package de.tu_bs.wire.simwatch.net;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -17,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
+import de.tu_bs.wire.simwatch.api.GsonUtil;
 import de.tu_bs.wire.simwatch.api.models.Instance;
 import de.tu_bs.wire.simwatch.net.requests.DeleteRequest;
 import de.tu_bs.wire.simwatch.net.requests.InstanceListRequest;
@@ -55,11 +55,11 @@ public class HTTPInstanceProvider extends InstanceProvider {
                             String responseString = response.body().string();
                             Instance instance = null;
                             try {
-                                instance = new Gson().fromJson(responseString, Instance.class);
+                                instance = GsonUtil.getGson().fromJson(responseString, Instance.class);
+                                listener.onInstanceAcquired(instance);
                             } catch (JsonSyntaxException e) {
                                 Log.e(TAG, "Received Instance '" + id + "' with broken syntax", e);
                             }
-                            listener.onInstanceAcquired(instance);
                         } else {
                             Log.e(TAG, "Cannot retrieve Instance '" + id + "'. Failed with HTTP status code " + response.code());
                         }
@@ -108,7 +108,6 @@ public class HTTPInstanceProvider extends InstanceProvider {
                         }
                     } catch (IOException e) {
                         Log.e(TAG, "Cannot delete Instance '" + id + "'");
-                        listener.onInstanceListAcquired(new ArrayList<String>());
                     }
                 }
             }
@@ -132,7 +131,7 @@ public class HTTPInstanceProvider extends InstanceProvider {
                             String responseString = response.body().string();
                             String instances[] = new String[0];
                             try {
-                                instances = new Gson().fromJson(responseString, String[].class);
+                                instances = GsonUtil.getGson().fromJson(responseString, String[].class);
                             } catch (JsonSyntaxException e) {
                                 Log.e(TAG, "Received Instance list with broken syntax", e);
                             }

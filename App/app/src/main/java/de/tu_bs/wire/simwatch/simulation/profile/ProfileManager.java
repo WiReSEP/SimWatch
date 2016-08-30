@@ -24,7 +24,7 @@ public class ProfileManager implements ProfileAcquisitionListener {
         this.context = context;
         profiles = new HashMap<>();
         storage = new FileProfileStorage(context);
-        readAllInstances();
+        readAllProfiles();
     }
 
     synchronized public static ProfileManager getInstance(Context context) {
@@ -41,8 +41,8 @@ public class ProfileManager implements ProfileAcquisitionListener {
         return instance;
     }
 
-    public void readAllInstances() {
-        Collection<Profile> profiles = storage.readAllInstances();
+    public void readAllProfiles() {
+        Collection<Profile> profiles = storage.readAllProfiles();
         synchronized (this.profiles) {
             for (Profile profile : profiles) {
                 this.profiles.put(profile.getID(), profile);

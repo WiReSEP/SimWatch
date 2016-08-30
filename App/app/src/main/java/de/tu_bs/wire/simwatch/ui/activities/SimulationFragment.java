@@ -17,6 +17,7 @@ import com.google.gson.JsonSyntaxException;
 import java.util.ArrayList;
 
 import de.tu_bs.wire.simwatch.R;
+import de.tu_bs.wire.simwatch.api.GsonUtil;
 import de.tu_bs.wire.simwatch.api.models.Instance;
 import de.tu_bs.wire.simwatch.api.models.Profile;
 import de.tu_bs.wire.simwatch.api.models.Snapshot;
@@ -69,7 +70,7 @@ public class SimulationFragment extends Fragment {
     public static SimulationFragment newInstance(Profile profile, Instance instance, int snapshotID) {
         SimulationFragment fragment = new SimulationFragment();
         Bundle args = new Bundle();
-        Gson gson = new Gson();
+        Gson gson = GsonUtil.getGson();
         args.putString(PROFILE_STR, gson.toJson(profile));
         args.putString(INSTANCE_STR, gson.toJson(instance));
         args.putString(SNAPSHOT_ID_STR, gson.toJson(snapshotID));
@@ -81,7 +82,7 @@ public class SimulationFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            Gson gson = new Gson();
+            Gson gson = GsonUtil.getGson();
             try {
                 profile = gson.fromJson(getArguments().getString(PROFILE_STR), Profile.class);
                 instance = gson.fromJson(getArguments().getString(INSTANCE_STR), Instance.class);

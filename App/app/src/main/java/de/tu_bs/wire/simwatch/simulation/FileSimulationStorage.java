@@ -3,8 +3,6 @@ package de.tu_bs.wire.simwatch.simulation;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.gson.Gson;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Scanner;
 
+import de.tu_bs.wire.simwatch.api.GsonUtil;
 import de.tu_bs.wire.simwatch.api.models.Instance;
 
 /**
@@ -43,7 +42,7 @@ public class FileSimulationStorage implements SimulationStorage {
             try {
                 if (file.exists() || file.createNewFile()) {
                     BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-                    writer.write(new Gson().toJson(sim));
+                    writer.write(GsonUtil.getGson().toJson(sim));
                     writer.flush();
                     writer.close();
                 } else {
@@ -72,7 +71,11 @@ public class FileSimulationStorage implements SimulationStorage {
         for (File file : simulationList) {
             try {
                 Instance newSim = readFromFile(file);
-                instances.add(newSim);
+                if (newSim == null) {
+                    Log.e(TAG, "Instance read from file " + file.getName() + " is null");
+                } else {
+                    instances.add(newSim);
+                }
             } catch (FileNotFoundException e) {
                 Log.e(TAG, "File " + file.getName() + " not found, even though it was retrieved by File.listFiles()");
             }

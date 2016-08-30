@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
@@ -20,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+import de.tu_bs.wire.simwatch.api.GsonUtil;
 import de.tu_bs.wire.simwatch.api.models.Attachment;
 
 /**
@@ -68,7 +68,7 @@ public class FileAttachmentKnowledge implements AttachmentKnowledge {
                 Type type = new TypeToken<Map<Attachment, String>>() {
                 }.getType();
                 try {
-                    return new Gson().fromJson(str, type);
+                    return GsonUtil.getGson().fromJson(str, type);
                 } catch (JsonSyntaxException e) {
                     Log.e(TAG, "Broken syntax in last modified knowledge file. Creating empty last modified knowledge", e);
                     return new HashMap<>();
@@ -93,7 +93,7 @@ public class FileAttachmentKnowledge implements AttachmentKnowledge {
                 Type type = new TypeToken<Map<Attachment, File>>() {
                 }.getType();
                 try {
-                    return new Gson().fromJson(str, type);
+                    return GsonUtil.getGson().fromJson(str, type);
                 } catch (JsonSyntaxException e) {
                     Log.e(TAG, "Broken syntax in file location knowledge file. Creating empty file location knowledge", e);
                     return new HashMap<>();
@@ -183,7 +183,7 @@ public class FileAttachmentKnowledge implements AttachmentKnowledge {
             try {
                 if (file.exists() || file.createNewFile()) {
                     BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-                    Gson gson = new GsonBuilder().enableComplexMapKeySerialization().create();
+                    Gson gson = GsonUtil.getBuilder().enableComplexMapKeySerialization().create();
                     writer.write(gson.toJson(attachment2Version));
                     writer.flush();
                     writer.close();
@@ -202,7 +202,7 @@ public class FileAttachmentKnowledge implements AttachmentKnowledge {
             try {
                 if (file.exists() || file.createNewFile()) {
                     BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-                    Gson gson = new GsonBuilder().enableComplexMapKeySerialization().create();
+                    Gson gson = GsonUtil.getBuilder().enableComplexMapKeySerialization().create();
                     writer.write(gson.toJson(attachment2File));
                     writer.flush();
                     writer.close();

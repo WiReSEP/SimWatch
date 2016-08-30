@@ -17,6 +17,7 @@ import java.io.File;
 import java.util.Map;
 
 import de.tu_bs.wire.simwatch.R;
+import de.tu_bs.wire.simwatch.api.GsonUtil;
 import de.tu_bs.wire.simwatch.api.models.Attachment;
 import de.tu_bs.wire.simwatch.api.models.Profile;
 import de.tu_bs.wire.simwatch.api.models.Snapshot;
@@ -70,9 +71,10 @@ public class SimulationPainter {
     private void drawProperty(ViewGroup viewGroup, String propertyName, JsonElement attribute, String type) {
         try {
             if (viewGroup != null && attribute != null) {
+                Gson gson = GsonUtil.getGson();
                 switch (Types.getType(type)) {
                     case NUMBER:
-                        Double d = new Gson().fromJson(attribute, Double.class);
+                        Double d = gson.fromJson(attribute, Double.class);
                         if (d == d.intValue()) {
                             drawString(viewGroup, propertyName + ": " + d.intValue());
                         } else {
@@ -80,19 +82,19 @@ public class SimulationPainter {
                         }
                         break;
                     case STRING:
-                        String s = new Gson().fromJson(attribute, String.class);
+                        String s = gson.fromJson(attribute, String.class);
                         drawString(viewGroup, propertyName + ": " + s);
                         break;
                     case VECTOR:
-                        Vector vector = new Gson().fromJson(attribute, Vector.class);
+                        Vector vector = gson.fromJson(attribute, Vector.class);
                         drawString(viewGroup, propertyName + ": " + vector.toString());
                         break;
                     case MATRIX:
-                        Matrix matrix = new Gson().fromJson(attribute, Matrix.class);
+                        Matrix matrix = gson.fromJson(attribute, Matrix.class);
                         drawString(viewGroup, propertyName + ": " + matrix.toString());
                         break;
                     case BOOLEAN:
-                        Boolean bool = new Gson().fromJson(attribute, Boolean.class);
+                        Boolean bool = gson.fromJson(attribute, Boolean.class);
                         drawString(viewGroup, propertyName + ": " + bool.toString());
                         break;
                     case PLOTTABLE:

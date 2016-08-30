@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -17,15 +16,16 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.Toast;
-
-import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.Collection;
 
 import de.tu_bs.wire.simwatch.R;
+import de.tu_bs.wire.simwatch.api.GsonUtil;
 import de.tu_bs.wire.simwatch.api.models.Instance;
 import de.tu_bs.wire.simwatch.api.models.Profile;
 import de.tu_bs.wire.simwatch.simulation.InstanceAcquisitionListener;
@@ -35,8 +35,7 @@ import de.tu_bs.wire.simwatch.simulation.ViewMemory;
 import de.tu_bs.wire.simwatch.simulation.profile.ProfileManager;
 import de.tu_bs.wire.simwatch.ui.MenuCreator;
 
-public class MainActivity extends AppCompatActivity implements NavigationView
-        .OnNavigationItemSelectedListener, UpdateListener, InstanceAcquisitionListener, SimulationFragment.OnSnapshotSelectedListener {
+public class MainActivity extends AppCompatActivity implements UpdateListener, InstanceAcquisitionListener, SimulationFragment.OnSnapshotSelectedListener, ListView.OnItemClickListener {
 
     private static final String TAG = "MainActivity";
     private static final String CURRENT_SIMULATION = "active_instance";
@@ -64,9 +63,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        ListView navigationView = (ListView) findViewById(R.id.nav_view);
         //noinspection ConstantConditions
-        navigationView.setNavigationItemSelectedListener(this);
+        navigationView.setOnItemClickListener(this);
 
         profileManager = ProfileManager.getInstance(this);
         try {
@@ -83,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
             }
         }
 
-        buildSimulationMenu(navigationView.getMenu());
+        buildSimulationList(navigationView);
 
         //set onClick listeners
         ImageView updateImgMain = (ImageView) findViewById(R.id.updateImgMain);
@@ -94,25 +93,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView
                 updateSimulations();
             }
         });
-        View headerLayout = navigationView.getHeaderView(0);
-        ImageView updateImgNav = (ImageView) headerLayout.findViewById(R.id.updateImgNav);
-        updateImgNav.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                updateSimulations();
-            }
-        });
+
+        //View headerLayout = navigationView.getHeaderView(0);
+        //ImageView updateImgNav = (ImageView) headerLayout.findViewById(R.id.updateImgNav);
+        //updateImgNav.setOnClickListener(new View.OnClickListener() {
+        //    @Override
+        //    public void onClick(View v) {
+        //        updateSimulations();
+        //    }
+        //});
+
         if (savedInstanceState == null) {
             simulationManager.autoUpdate();
         }
     }
 
-    private void buildSimulationMenu(final Menu menu) {
+    private void buildSimulationList(final ListView listView) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                menuCreator = new MenuCreator();
-                menuCreator.populateSimulationMenu(menu, simulationManager.getInstances(), simulationManager.getViewMemory());
+                menuCreator = new MenuCreator(MainActivity.this);
+                menuCreator.populateSimulationList(listView, simulationManager.getInstances(), simulationManager.getViewMemory());
             }
         });
     }
@@ -193,22 +194,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView
         }
     }
 
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-
-        if (menuCreator.hasItem(item)) {
-            setCurrentSimulation(menuCreator.getInstanceChosen(item));
-        } else {
-            return false;
-        }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        //noinspection ConstantConditions
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
-
     private void setCurrentSimulation(Instance sim) {
         setCurrentSimulation(sim, -1);
     }
@@ -222,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
             currentSnapshotIndex = snapshotIndex;
             simulationManager.removeUpdateListener(this);
             if (currentSimulation != null) {
-                Log.d(TAG, new Gson().toJson(currentSimulation));
+                Log.d(TAG, GsonUtil.getGson().toJson(currentSimulation));
                 simulationManager.addUpdateListener(sim.getID(), this);
                 drawSimulation();
             }
@@ -277,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
         ViewMemory viewMemory = simulationManager.getViewMemory();
         if (currentSimulation != null && viewMemory.viewInstance(currentSimulation, currentSnapshotIndex) > 0) {
             //noinspection ConstantConditions
-            buildSimulationMenu(((NavigationView) findViewById(R.id.nav_view)).getMenu());
+            buildSimulationList(((ListView) findViewById(R.id.nav_view)));
         }
     }
 
@@ -320,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
     @Override
     public void onInstanceListAcquired(Collection<String> instanceIDs) {
         //noinspection ConstantConditions
-        buildSimulationMenu(((NavigationView) findViewById(R.id.nav_view)).getMenu());
+        buildSimulationList(((ListView) findViewById(R.id.nav_view)));
         if (currentSimulation == null) {
             if (simulationManager.getInstanceList().size() == simulationManager.getInstances().size()) {
                 makeToast(getString(R.string.update_complete), Toast.LENGTH_SHORT);
@@ -340,7 +325,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView
     @Override
     public void onInstanceAcquired(Instance sim) {
         //noinspection ConstantConditions
-        buildSimulationMenu(((NavigationView) findViewById(R.id.nav_view)).getMenu());
+        buildSimulationList(((ListView) findViewById(R.id.nav_view)));
         if (currentSimulation == null) {
             if (simulationManager.getInstanceList().size() == simulationManager.getInstances().size()) {
                 makeToast(getString(R.string.update_complete), Toast.LENGTH_SHORT);
@@ -363,5 +348,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView
     public void onNoSnapshotSelected() {
         Log.d(TAG, "Newest snapshot selected");
         setCurrentSimulation(currentSimulation);
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+
+        if (menuCreator.hasItem(id)) {
+            setCurrentSimulation(menuCreator.getInstanceChosen(id));
+        } else {
+            return;
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        //noinspection ConstantConditions
+        drawer.closeDrawer(GravityCompat.START);
+
     }
 }

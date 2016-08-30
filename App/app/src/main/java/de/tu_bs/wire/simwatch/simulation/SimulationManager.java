@@ -267,7 +267,9 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
         Collection<Attachment> attachments = instance.getAttachments();
         for (Attachment attachment : attachments) {
             String newestOccurrence = instance.getLastOccurrence(attachment.getAttachmentName());
-            attachmentManager.download(attachment, newestOccurrence);
+            if (newestOccurrence != null) {
+                attachmentManager.download(attachment, newestOccurrence);
+            }
         }
     }
 

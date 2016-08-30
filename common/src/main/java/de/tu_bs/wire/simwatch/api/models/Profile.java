@@ -2,6 +2,7 @@ package de.tu_bs.wire.simwatch.api.models;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
@@ -28,7 +29,11 @@ public class Profile {
     }
 
     public static Profile fromString(String str) {
-        return GsonUtil.getGson().fromJson(str, Profile.class);
+        try {
+            return GsonUtil.getGson().fromJson(str, Profile.class);
+        } catch (JsonSyntaxException e) {
+            return null;
+        }
     }
 
     public String getID() {

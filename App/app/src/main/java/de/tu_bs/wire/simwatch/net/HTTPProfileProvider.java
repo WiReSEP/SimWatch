@@ -3,7 +3,6 @@ package de.tu_bs.wire.simwatch.net;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -12,6 +11,7 @@ import com.squareup.okhttp.Response;
 import java.io.IOException;
 import java.net.URL;
 
+import de.tu_bs.wire.simwatch.api.GsonUtil;
 import de.tu_bs.wire.simwatch.api.models.Profile;
 import de.tu_bs.wire.simwatch.net.requests.ProfileRequest;
 import de.tu_bs.wire.simwatch.simulation.profile.ProfileAcquisitionListener;
@@ -49,11 +49,11 @@ public class HTTPProfileProvider extends ProfileProvider {
                             Profile profile = null;
                             Log.d(TAG, "Received profile '" + id + "': " + responseString);
                             try {
-                                profile = new Gson().fromJson(responseString, Profile.class);
+                                profile = GsonUtil.getGson().fromJson(responseString, Profile.class);
+                                listener.onProfileAcquired(profile);
                             } catch (JsonSyntaxException e) {
                                 Log.e(TAG, "Received Profile '" + id + "' with broken syntax", e);
                             }
-                            listener.onProfileAcquired(profile);
                         } else {
                             Log.e(TAG, "Cannot retrieve Profile " + id + ". Failed with HTTP status code " + response.code());
                         }

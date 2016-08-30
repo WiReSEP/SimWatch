@@ -29,4 +29,6 @@
     <string name="attachment">attachment</string>
     <string name="title_activity_zoom">ZoomActivity</string>
     <string name="serverAddress">Server address</string>
+    <string name="running">running</string>
+    <string name="last_update">Last update: %s</string>
 </resources>

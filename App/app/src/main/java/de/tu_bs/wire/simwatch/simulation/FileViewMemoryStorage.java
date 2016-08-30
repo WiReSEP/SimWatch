@@ -3,7 +3,6 @@ package de.tu_bs.wire.simwatch.simulation;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
@@ -16,6 +15,8 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+
+import de.tu_bs.wire.simwatch.api.GsonUtil;
 
 /**
  * Implementation of the ViewMemoryStorage using files in the private app directory to store
@@ -50,7 +51,7 @@ public class FileViewMemoryStorage extends ViewMemoryStorage {
                 Type type = new TypeToken<Map<String, Integer>>() {
                 }.getType();
                 try {
-                    return new Gson().fromJson(str, type);
+                    return GsonUtil.getGson().fromJson(str, type);
                 } catch (JsonSyntaxException e) {
                     Log.e(TAG, "Broken syntax in view memory file. Creating empty view memory", e);
                     return new HashMap<>();
@@ -71,7 +72,7 @@ public class FileViewMemoryStorage extends ViewMemoryStorage {
             try {
                 if (file.exists() || file.createNewFile()) {
                     BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-                    writer.write(new Gson().toJson(storage));
+                    writer.write(GsonUtil.getGson().toJson(storage));
                     writer.flush();
                     writer.close();
                 } else {

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent">
+
+    <ImageView android:id="@+id/status"
+               xmlns:android="http://schemas.android.com/apk/res/android"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_alignParentLeft="true"
+               android:layout_alignParentStart="true"
+               android:layout_alignParentTop="true"
+               android:contentDescription="@string/running"
+               android:visibility="gone">
+    </ImageView>
+
+    <TextView android:id="@+id/name"
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_alignParentTop="true"
+              android:layout_toEndOf="@+id/status"
+              android:layout_toRightOf="@+id/status"
+              android:paddingBottom="0dp"
+              android:paddingEnd="10dp"
+              android:paddingLeft="10dp"
+              android:paddingRight="10dp"
+              android:paddingStart="10dp"
+              android:paddingTop="5dp">
+    </TextView>
+
+    <TextView android:id="@+id/UUID"
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_below="@+id/name"
+              android:paddingBottom="0dp"
+              android:paddingEnd="10dp"
+              android:paddingLeft="10dp"
+              android:paddingRight="10dp"
+              android:paddingStart="10dp"
+              android:paddingTop="0dp">
+    </TextView>
+
+    <TextView android:id="@+id/newUpdates"
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_alignParentTop="true"
+              android:layout_toEndOf="@+id/name"
+              android:layout_toRightOf="@+id/name"
+              android:paddingBottom="0dp"
+              android:paddingEnd="10dp"
+              android:paddingLeft="10dp"
+              android:paddingRight="10dp"
+              android:paddingStart="10dp"
+              android:paddingTop="5dp">
+    </TextView>
+
+    <TextView android:id="@+id/dateOfCreation"
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_alignTop="@+id/UUID"
+              android:layout_toEndOf="@+id/UUID"
+              android:layout_toRightOf="@+id/UUID"
+              android:paddingBottom="0dp"
+              android:paddingEnd="10dp"
+              android:paddingLeft="10dp"
+              android:paddingRight="10dp"
+              android:paddingStart="10dp"
+              android:paddingTop="0dp">
+    </TextView>
+
+    <TextView android:id="@+id/lastUpdate"
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_alignParentLeft="true"
+              android:layout_alignParentStart="true"
+              android:layout_below="@+id/UUID"
+              android:paddingBottom="5dp"
+              android:paddingEnd="10dp"
+              android:paddingLeft="10dp"
+              android:paddingRight="10dp"
+              android:paddingStart="10dp"
+              android:paddingTop="0dp">
+    </TextView>
+</RelativeLayout>
