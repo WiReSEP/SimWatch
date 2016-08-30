@@ -21,8 +21,6 @@ class DataBase:
     instances = db['instances']
     profiles = db['profiles']
     logger.info('initiated database')
-    instances.delete_many({})
-    #profiles.delete_many({})
 
     def insert_instance(self, instancee):
         self.instances.insert_one(instancee.dict_instance)
@@ -32,8 +30,19 @@ class DataBase:
 
     def update_instance(self, instancee):
         logger.info('Storing update in database now...')
-        self.instances.update_one({ID: ObjectId(instancee.id)}, {'$set': {UPDATES: instancee.dict_instance[UPDATES]}},
-                                  upsert=False)
+        self.instances.update_one(
+            {
+                ID: ObjectId(instancee.id)
+            },
+            {
+                '$set': {
+                    UPDATES: instancee.dict_instance[UPDATES],
+                    STATUS: instancee.dict_instance[STATUS],
+                    ERROR: instancee.dict_instance[ERROR]
+                }
+            },
+            upsert=False
+        )
         dict_instance = self.get_instance(instancee.id)
         logger.info('updates after saving: ' + str(dict_instance[UPDATES]))
         logger.info('instance updated: ' + instancee.id)
@@ -53,7 +62,7 @@ class DataBase:
 
     def get_all_instance_status(self):
         logger.info('getting all instance status...')
-        return self.instances.find({}, {ID: 1, STATUS: 1, ERROR:1})
+        return self.instances.find({}, {ID: 1, STATUS: 1, ERROR: 1})
 
     def insert_profile(self, profile):
         logger.info('inserting profile: ' + str(profile))
@@ -66,9 +75,9 @@ class DataBase:
 
     def delete_instance(self, id):
 
-        logger.info('deleting instance: '+ id)
+        logger.info('deleting instance: ' + id)
         obj_id = ObjectId(id)
-        dict_id = {"_id" : obj_id}
+        dict_id = {"_id": obj_id}
         response = self.instances.delete_one(dict_id)
         logger.info('response: ' + str(response))
         return 'instance {} deleted'.format(id)

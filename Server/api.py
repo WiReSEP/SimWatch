@@ -92,6 +92,7 @@ def send_status(instance_id):
     if not instancee.is_valid():
         return Response(to_json(None), mimetype=_JSON_MIME, status=404)
     status = 200 if instancee.set_status(post_params.get('status'), post_params.get('error')) else 422
+    _db.update_instance(instancee)
     return Response(to_json(None), mimetype=_JSON_MIME, status=status)
 
 
