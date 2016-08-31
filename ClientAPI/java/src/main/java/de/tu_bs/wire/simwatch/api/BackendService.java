@@ -20,4 +20,17 @@ interface BackendService {
     Call<Void> uploadAttachment(@Path("instId") String instId,
                                 @Path("name") String name,
                                 @Body RequestBody body);
+
+    @POST("/instance/{instId}/status")
+    Call<Void> updateStatus(@Path("instId") String instId, @Body StatusUpdate statusUpdate);
+
+    class StatusUpdate {
+        final Instance.Status status;
+        final Instance.Error error;
+
+        StatusUpdate(Instance.Status status, Instance.Error error) {
+            this.status = status;
+            this.error = error;
+        }
+    }
 }

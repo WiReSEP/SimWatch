@@ -22,11 +22,17 @@ class Demo {
 
     public static void main(String[] args) {
         try {
-            SimWatchClient client = SimWatchClient.registerSimulation("My Simulation #1", new File("example_profile.json"));
+            final SimWatchClient client = SimWatchClient.registerSimulation("My Simulation #1",
+                    new File("example_profile.json"));
+            Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                @Override
+                public void uncaughtException(Thread thread, Throwable throwable) {
+                    client.notifyFailed(throwable);
+                }
+            });
 
             Random rand = new Random();
             Scanner scanner = new Scanner(System.in);
-
             final BufferedImage image = new BufferedImage(300, 300, BufferedImage.TYPE_INT_RGB);
             Graphics2D graphics = image.createGraphics();
             Integer[] numbers = new Integer[SIZE];
@@ -49,8 +55,19 @@ class Demo {
                         })
                         .post();
                 System.out.println("Press [ENTER] ");
-                scanner.nextLine();
+                String line = scanner.nextLine();
+                if (!line.isEmpty()) {
+                    if (line.equals("crash")) {
+                        throw new RuntimeException("User requested a crash");
+                    }
+                    client.notifyFailed(line);
+                    return;
+                }
             }
+
+            client.notifyDone();
+
+            Thread.setDefaultUncaughtExceptionHandler(null);
         } catch (RegistrationException e) {
             e.printStackTrace();
         }

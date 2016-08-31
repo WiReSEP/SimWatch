@@ -5,7 +5,9 @@ import com.google.gson.JsonSyntaxException;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.logging.HttpLoggingInterceptor;
+import de.tu_bs.wire.simwatch.api.BackendService.StatusUpdate;
 import de.tu_bs.wire.simwatch.api.models.Instance;
+import de.tu_bs.wire.simwatch.api.models.Instance.Status;
 import de.tu_bs.wire.simwatch.api.models.Profile;
 import de.tu_bs.wire.simwatch.api.models.Update;
 import org.jetbrains.annotations.Nullable;
@@ -60,8 +62,9 @@ public class SimWatchClient {
                 "%1$tF %1$tT %4$s [SimWatch] %5$s%6$s%n");
     }
 
-    private final BackendService backendService;
+    private final BackendService backend;
     private Instance simInstance;
+    private boolean finished;
 
     private SimWatchClient(Configuration configuration) {
         OkHttpClient client = new OkHttpClient();
@@ -80,9 +83,9 @@ public class SimWatchClient {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(configuration.getUrl())
                 .client(client)
-                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(GsonUtil.getGson()))
                 .build();
-        backendService = retrofit.create(BackendService.class);
+        backend = retrofit.create(BackendService.class);
     }
 
     /**
@@ -123,7 +126,7 @@ public class SimWatchClient {
             Configuration configuration = yaml.loadAs(in, Configuration.class);
             if (configuration.getUrl() == null) {
                 LOG.severe("The config file " + configFile + " does not contain " +
-                        "the mandatory 'url' property");
+                           "the mandatory 'url' property");
                 throw new RegistrationException("url not set in configuration");
             }
             LOG.info(configuration.toString());
@@ -144,8 +147,8 @@ public class SimWatchClient {
             Files.copy(defaultConf, ConfigDirectory.USER.path.resolve("example_" + CONF_FILE_NAME),
                     StandardCopyOption.REPLACE_EXISTING);
             LOG.severe("No configuration file found. " +
-                    "An example configuration file has been written to " +
-                    ConfigDirectory.USER.path);
+                       "An example configuration file has been written to " +
+                       ConfigDirectory.USER.path);
         } catch (IOException e) {
             LOG.log(Level.SEVERE, "cannot create example config", e);
         }
@@ -169,6 +172,16 @@ public class SimWatchClient {
     }
 
     /**
+     * Returns a human-readable identifier for the registered simulation instance.
+     * The original ID assigned by the backend is hashed to make it shorter.
+     *
+     * @return A short id (5 hex characters) for the registered simulation instance
+     */
+    public String getShortId() {
+        return simInstance.getShortenedID();
+    }
+
+    /**
      * Register a new simulation
      *
      * @param name        Name of the simulation, displayed in the app
@@ -180,10 +193,12 @@ public class SimWatchClient {
             InputStreamReader jsonReader = new FileReader(profileFile);
             Profile profile = new Gson().fromJson(jsonReader, Profile.class);
             Instance instance = new Instance(name, profile);
-            Call<Instance> register = backendService.register(instance);
+            Call<Instance> register = backend.register(instance);
             Response<Instance> response = register.execute();
             if (response.isSuccess()) {
                 simInstance = response.body();
+                LOG.info(format("Simulation instance '%s' (%s) registered",
+                        simInstance.getName(), getShortId()));
             } else {
                 String message = format("Server responded with Error %d: %s",
                         response.code(), response.message());
@@ -214,14 +229,17 @@ public class SimWatchClient {
         if (simInstance == null) {
             throw new IllegalStateException("Not registered");
         }
+        if (finished) {
+            throw new IllegalStateException("No updates accepted after stopping");
+        }
         try {
-            Response response = backendService.update(simInstance.getID(), update).execute();
+            Response response = backend.update(simInstance.getID(), update).execute();
             if (response.isSuccess()) {
                 for (Map.Entry<String, RequestBody> attachment : attachments.entrySet()) {
                     String propertyName = attachment.getKey();
                     RequestBody requestBody = attachment.getValue();
                     Response<Void> uploadResp =
-                            backendService.uploadAttachment(simInstance.getID(), propertyName,
+                            backend.uploadAttachment(simInstance.getID(), propertyName,
                                     requestBody).execute();
                     if (!uploadResp.isSuccess()) {
                         LOG.warning(format("Cannot upload attachment '%s': Error %d - %s",
@@ -237,6 +255,74 @@ public class SimWatchClient {
             }
         } catch (IOException e) {
             LOG.log(Level.WARNING, "Cannot post update", e);
+            return false;
+        }
+    }
+
+    /**
+     * Same as {@link #notifyFailed(String, Throwable) notifyFailed(null, t)}
+     *
+     * @return <code>true</code> if the status update was sent successfully
+     * @see #notifyFailed(String, Throwable)
+     */
+    public boolean notifyFailed(Throwable t) {
+        return notifyFailed(null, t);
+    }
+
+    /**
+     * Same as {@link #notifyFailed(String, Throwable) notifyFailed(message, null)}
+     *
+     * @return <code>true</code> if the status update was sent successfully
+     * @see #notifyFailed(String, Throwable)
+     */
+    public boolean notifyFailed(String message) {
+        return notifyFailed(message, null);
+    }
+
+    /**
+     * Notify the backend that the simulation stopped due to an error.
+     * <p>
+     * <p><strong>Note:</strong> If the method returns true, no further updates will
+     * be accepted (attempting so will throw an exception)</p>
+     *
+     * @param message Custom error message
+     * @param t       Stacktrace will if this throwable be send to the backend
+     * @return <code>true</code> if the status update was sent successfully
+     * @see #notifyDone()
+     */
+    public boolean notifyFailed(String message, Throwable t) {
+        Instance.Error error = new Instance.Error(message, t);
+        return handleStatusUpdate(Status.FAILED, error);
+    }
+
+    /**
+     * Notify the backend that the simulation completed the execution successfully.
+     * <p>
+     * <p><strong>Note:</strong> If the method returns true, no further updates will
+     * be accepted (attempting so will throw an exception)</p>
+     *
+     * @return <code>true</code> if the status update was sent successfully
+     * @see #notifyFailed(String, Throwable)
+     */
+    public boolean notifyDone() {
+        return handleStatusUpdate(Status.STOPPED, null);
+    }
+
+    private boolean handleStatusUpdate(Status status, Instance.Error error) {
+        try {
+            StatusUpdate statusUpdate = new StatusUpdate(status, error);
+            Response<Void> response = backend
+                    .updateStatus(simInstance.getID(), statusUpdate).execute();
+            if (response.isSuccess()) {
+                finished = true;
+                return true;
+            } else {
+                LOG.warning(format("Cannot post status: Error %d - %s",
+                        response.code(), response.message()));
+                return false;
+            }
+        } catch (IOException e) {
+            LOG.log(Level.WARNING, "Cannot post status", e);
             return false;
         }
     }
