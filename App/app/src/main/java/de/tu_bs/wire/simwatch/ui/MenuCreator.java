@@ -30,11 +30,11 @@ public class MenuCreator {
     /**
      * Puts an item into the given menu for each given Instance and remembers the MenuItems added
      * until this method is called again
-     *
      * @param listView  The menu to populate
+     * @param updateButtonListener Listener for when an update button in the menu is pressed
      * @param instances The Instances to populate the list with
      */
-    public void populateSimulationList(ListView listView, Collection<Instance> instances, ViewMemory viewMemory) {
+    public void populateSimulationList(ListView listView, UpdateButtonListener updateButtonListener, Collection<Instance> instances, ViewMemory viewMemory) {
         map.clear();
 
         NavigationItem[] entries = new NavigationItem[instances.size()];
@@ -47,10 +47,11 @@ public class MenuCreator {
             counter++;
         }
         Arrays.sort(entries, new NavigationSorter());
+        NavigationAdapter adapter = new NavigationAdapter(context, updateButtonListener, R.layout.nav_item, entries);
         for (int i = 0; i < entries.length; i++) {
-            map.put((long) i, item2instance.get(entries[i]));
+            map.put((long) i + adapter.getOffset(), item2instance.get(entries[i]));
         }
-        listView.setAdapter(new NavigationAdapter(context, R.layout.nav_item, entries));
+        listView.setAdapter(adapter);
     }
 
     private NavigationItem getMenuEntry(Instance instance, ViewMemory viewMemory) {

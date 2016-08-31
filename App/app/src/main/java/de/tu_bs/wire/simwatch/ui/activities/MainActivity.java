@@ -34,8 +34,9 @@ import de.tu_bs.wire.simwatch.simulation.UpdateListener;
 import de.tu_bs.wire.simwatch.simulation.ViewMemory;
 import de.tu_bs.wire.simwatch.simulation.profile.ProfileManager;
 import de.tu_bs.wire.simwatch.ui.MenuCreator;
+import de.tu_bs.wire.simwatch.ui.UpdateButtonListener;
 
-public class MainActivity extends AppCompatActivity implements UpdateListener, InstanceAcquisitionListener, SimulationFragment.OnSnapshotSelectedListener, ListView.OnItemClickListener {
+public class MainActivity extends AppCompatActivity implements UpdateListener, InstanceAcquisitionListener, SimulationFragment.OnSnapshotSelectedListener, ListView.OnItemClickListener, UpdateButtonListener {
 
     private static final String TAG = "MainActivity";
     private static final String CURRENT_SIMULATION = "active_instance";
@@ -113,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
             @Override
             public void run() {
                 menuCreator = new MenuCreator(MainActivity.this);
-                menuCreator.populateSimulationList(listView, simulationManager.getInstances(), simulationManager.getViewMemory());
+                menuCreator.populateSimulationList(listView, MainActivity.this, simulationManager.getInstances(), simulationManager.getViewMemory());
             }
         });
     }
@@ -352,7 +353,6 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-
         if (menuCreator.hasItem(id)) {
             setCurrentSimulation(menuCreator.getInstanceChosen(id));
         } else {
@@ -363,5 +363,10 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
         //noinspection ConstantConditions
         drawer.closeDrawer(GravityCompat.START);
 
+    }
+
+    @Override
+    public void onUpdateButtonPressed() {
+        updateSimulations();
     }
 }

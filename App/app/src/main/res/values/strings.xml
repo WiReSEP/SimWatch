@@ -31,4 +31,5 @@
     <string name="serverAddress">Server address</string>
     <string name="running">running</string>
     <string name="last_update">Last update: %s</string>
+    <string name="simulations">Simulations</string>
 </resources>
