@@ -139,7 +139,7 @@ public class NavigationAdapter extends ArrayAdapter<NavigationItem> {
                 newUpdates.setText(String.format(Locale.getDefault(), "(%d)", item.getNewUpdates()));
             }
             if (dateOfCreation != null && item.getDateOfCreation() != null) {
-                dateOfCreation.setText(datePrinter.print(item.getDateOfCreation()));
+                dateOfCreation.setText(datePrinter.print(item.getDateOfCreation(), DatePrinter.Format.MEDIUM));
             }
             if (lastUpdate != null && item.getLastUpdate() != null) {
                 lastUpdate.setText(String.format(getContext().getString(R.string.last_update), datePrinter.print(item.getLastUpdate(), DatePrinter.Format.MEDIUM)));

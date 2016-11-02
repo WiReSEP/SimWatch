@@ -28,6 +28,7 @@ import de.tu_bs.wire.simwatch.R;
 import de.tu_bs.wire.simwatch.api.GsonUtil;
 import de.tu_bs.wire.simwatch.api.models.Instance;
 import de.tu_bs.wire.simwatch.api.models.Profile;
+import de.tu_bs.wire.simwatch.simulation.AttachmentManager;
 import de.tu_bs.wire.simwatch.simulation.InstanceAcquisitionListener;
 import de.tu_bs.wire.simwatch.simulation.SimulationManager;
 import de.tu_bs.wire.simwatch.simulation.UpdateListener;
@@ -36,7 +37,7 @@ import de.tu_bs.wire.simwatch.simulation.profile.ProfileManager;
 import de.tu_bs.wire.simwatch.ui.MenuCreator;
 import de.tu_bs.wire.simwatch.ui.UpdateButtonListener;
 
-public class MainActivity extends AppCompatActivity implements UpdateListener, InstanceAcquisitionListener, SimulationFragment.OnSnapshotSelectedListener, ListView.OnItemClickListener, UpdateButtonListener {
+public class MainActivity extends AppCompatActivity implements UpdateListener, InstanceAcquisitionListener, SimulationFragment.SimulationHandlerActivity, ListView.OnItemClickListener, UpdateButtonListener {
 
     private static final String TAG = "MainActivity";
     private static final String CURRENT_SIMULATION = "active_instance";
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
     private MenuCreator menuCreator;
     private ProfileManager profileManager;
     private Toast mostRecentToast;
+    private UpdateStatus lastStatusUpdate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,12 +70,12 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
         //noinspection ConstantConditions
         navigationView.setOnItemClickListener(this);
 
-        profileManager = ProfileManager.getInstance(this);
         try {
             setupSimulationManager();
         } catch (IOException e) {
             Log.e(TAG, "Could not open simulation manager", e);
         }
+        profileManager = simulationManager.getProfileManager();
 
         if (savedInstanceState != null) {
             String currentSimulationID = savedInstanceState.getString(CURRENT_SIMULATION);
@@ -105,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
         //});
 
         if (savedInstanceState == null) {
-            simulationManager.autoUpdate();
+            autoUpdate();
         }
     }
 
@@ -120,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
     }
 
     private void setupSimulationManager() throws IOException {
-        simulationManager = SimulationManager.getInstance(this);
+        simulationManager = new SimulationManager(this);
         simulationManager.addInstanceAcquisitionListener(this);
     }
 
@@ -201,23 +203,31 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
 
     private void setCurrentSimulation(Instance sim, int snapshotIndex) {
         if (sim != currentSimulation || snapshotIndex != currentSnapshotIndex) {
+            // Removing and re-adding of UpdateListeners is redundant in the current implementation,
+            // but we do it anyway to avoid any race conditions while changing simulations
+            simulationManager.removeUpdateListener(this);
             if (sim != currentSimulation) {
                 currentSimulation = sim;
                 invalidateOptionsMenu();
             }
             currentSnapshotIndex = snapshotIndex;
-            simulationManager.removeUpdateListener(this);
+            simulationManager.addUpdateListener(this);
             if (currentSimulation != null) {
                 Log.d(TAG, GsonUtil.getGson().toJson(currentSimulation));
-                simulationManager.addUpdateListener(sim.getID(), this);
                 drawSimulation();
             }
         }
     }
 
+    private void autoUpdate() {
+        lastStatusUpdate = null;
+        simulationManager.autoUpdate();
+    }
+
     public void updateSimulations() {
         Log.d(TAG, "Ordered to update");
         makeToast(getString(R.string.updating), Toast.LENGTH_LONG);
+        lastStatusUpdate = null;
         simulationManager.updateAllInstances();
     }
 
@@ -277,19 +287,24 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
 
     @Override
     public void onUpdate(Collection<String> instanceIDs) {
-        makeToast(getString(R.string.update_complete), Toast.LENGTH_SHORT);
-        drawSimulation();
+        if (currentSimulation != null && instanceIDs.contains(currentSimulation.getID())) {
+            proclaimUpdateStatus(UpdateStatus.UPDATE_COMPLETE);
+            drawSimulation();
+        } else {
+            proclaimUpdateStatus(UpdateStatus.UPDATES_ELSEWHERE);
+        }
+        buildSimulationList(((ListView) findViewById(R.id.nav_view)));
     }
 
     @Override
     public void onNoUpdates() {
-        makeToast(getString(R.string.no_new_updates), Toast.LENGTH_SHORT);
+        proclaimUpdateStatus(UpdateStatus.NO_UPDATES);
     }
 
     @Override
     public void onUpdateFailed(Collection<String> instanceIDs) {
         if (currentSimulation != null && instanceIDs.contains(currentSimulation.getID())) {
-            makeToast(getString(R.string.updating_failed), Toast.LENGTH_SHORT);
+            proclaimUpdateStatus(UpdateStatus.COULD_NOT_UPDATE);
         }
     }
 
@@ -307,11 +322,7 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
     public void onInstanceListAcquired(Collection<String> instanceIDs) {
         //noinspection ConstantConditions
         buildSimulationList(((ListView) findViewById(R.id.nav_view)));
-        if (currentSimulation == null) {
-            if (simulationManager.getInstanceList().size() == simulationManager.getInstances().size()) {
-                makeToast(getString(R.string.update_complete), Toast.LENGTH_SHORT);
-            }
-        } else if (!instanceIDs.contains(currentSimulation.getID())) {
+        if (currentSimulation != null && !instanceIDs.contains(currentSimulation.getID())) {
             setCurrentSimulation(null, -1);
         }
     }
@@ -319,7 +330,7 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
     @Override
     public void onInstanceListAcquisitionFailed() {
         if (currentSimulation == null) {
-            makeToast(getString(R.string.updating_failed), Toast.LENGTH_SHORT);
+            proclaimUpdateStatus(UpdateStatus.COULD_NOT_UPDATE);
         }
     }
 
@@ -329,8 +340,10 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
         buildSimulationList(((ListView) findViewById(R.id.nav_view)));
         if (currentSimulation == null) {
             if (simulationManager.getInstanceList().size() == simulationManager.getInstances().size()) {
-                makeToast(getString(R.string.update_complete), Toast.LENGTH_SHORT);
+                proclaimUpdateStatus(UpdateStatus.UPDATE_COMPLETE);
             }
+        } else {
+            proclaimUpdateStatus(UpdateStatus.UPDATES_ELSEWHERE);
         }
     }
 
@@ -352,6 +365,11 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
     }
 
     @Override
+    public AttachmentManager getAttachmentManager() {
+        return simulationManager.getAttachmentManager();
+    }
+
+    @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
         if (menuCreator.hasItem(id)) {
             setCurrentSimulation(menuCreator.getInstanceChosen(id));
@@ -368,5 +386,44 @@ public class MainActivity extends AppCompatActivity implements UpdateListener, I
     @Override
     public void onUpdateButtonPressed() {
         updateSimulations();
+    }
+
+    private void proclaimUpdateStatus(UpdateStatus status) {
+        if (status != null && status.isMoreRelevantThan(lastStatusUpdate)) {
+            lastStatusUpdate = status;
+            switch (status) {
+                default:
+                case NO_UPDATES:
+                    makeToast(getString(R.string.no_new_updates), Toast.LENGTH_SHORT);
+                    break;
+                case COULD_NOT_UPDATE:
+                    makeToast(getString(R.string.updating_failed), Toast.LENGTH_SHORT);
+                    break;
+                case UPDATES_ELSEWHERE:
+                    makeToast(getString(R.string.updates_elsewhere), Toast.LENGTH_SHORT);
+                    break;
+                case UPDATE_COMPLETE:
+                    makeToast(getString(R.string.update_complete), Toast.LENGTH_SHORT);
+                    break;
+            }
+        }
+    }
+
+    enum UpdateStatus {
+        NO_UPDATES, COULD_NOT_UPDATE, UPDATES_ELSEWHERE, UPDATE_COMPLETE;
+
+        public boolean isMoreRelevantThan(UpdateStatus other) {
+            switch (this) {
+                default:
+                case NO_UPDATES:
+                    return other == null;
+                case COULD_NOT_UPDATE:
+                    return other == NO_UPDATES || other == null;
+                case UPDATES_ELSEWHERE:
+                    return other == NO_UPDATES || other == COULD_NOT_UPDATE || other == null;
+                case UPDATE_COMPLETE:
+                    return other == NO_UPDATES || other == COULD_NOT_UPDATE || other == UPDATES_ELSEWHERE || other == null;
+            }
+        }
     }
 }

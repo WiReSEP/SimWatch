@@ -28,12 +28,12 @@ public class SnapshotSelector implements AdapterView.OnItemSelectedListener {
     private Context context;
     private Instance instance;
     private Profile profile;
-    private SimulationFragment.OnSnapshotSelectedListener listener;
+    private SimulationFragment.SimulationHandlerActivity listener;
     private int noneItemPosition;
     private int snapshotItemStartingPosition;
     private int numberOfItems;
 
-    public SnapshotSelector(Context context, Instance instance, Profile profile, SimulationFragment.OnSnapshotSelectedListener listener) {
+    public SnapshotSelector(Context context, Instance instance, Profile profile, SimulationFragment.SimulationHandlerActivity listener) {
         this.context = context;
         this.instance = instance;
         this.profile = profile;

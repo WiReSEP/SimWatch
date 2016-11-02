@@ -34,6 +34,10 @@ public class ZoomActivity extends AppCompatActivity {
         display.getSize(displaySize);
         File imageFile = (File) getIntent().getSerializableExtra(FILE_STR);
         Bitmap imageBitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+        if (imageBitmap == null) {
+            Log.e(TAG, "Couldn't read bitmap in file '" + imageFile + "'");
+            return;
+        }
         Point imageSize = new Point(imageBitmap.getWidth(), imageBitmap.getHeight());
         double scale = Math.max(Math.min((double) displaySize.x / imageSize.x, (double) displaySize.y / imageSize.y), 1);
         Bitmap displayBitmap = Bitmap.createScaledBitmap(imageBitmap, (int) (imageSize.x * scale), (int) (imageSize.y * scale), true);

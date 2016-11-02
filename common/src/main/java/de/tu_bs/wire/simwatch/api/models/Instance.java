@@ -128,7 +128,7 @@ public class Instance {
 
     public String getLastOccurrence(String attachmentName) {
         String updateID = null;
-        for (int i = updates.size() - 1; i >= 0; i--) {
+        for (int i = getNumberOfUpdates() - 1; i >= 0; i--) {
             Update update = updates.get(i);
             if (update.attachments.contains(attachmentName)) {
                 updateID = update.getID();

@@ -29,10 +29,17 @@ import de.tu_bs.wire.simwatch.ui.activities.SettingsActivity;
 public class SimulationManager implements InstanceAcquisitionListener, UpdateListener {
 
     private static final String TAG = "SimulationManager";
-    private static SimulationManager instance;
     private final Map<String, Instance> simulations;
+    /**
+     * UpdateListeners that want to be informed about any updates
+     */
+    private final Collection<UpdateListener> genericUpdateListeners;
+    /**
+     * UpdateListeners that want to be informed about updates from a specific subset of instances
+     */
     private final Multimap<UpdateListener, String> updateListenerRegistrations;
     private final Collection<InstanceAcquisitionListener> instanceListeners;
+    private final AttachmentManager attachmentManager;
     private Collection<String> existingInstanceIDs;
     private InstanceProvider instanceProvider;
     private Context context;
@@ -40,9 +47,9 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
     private SimulationStorage storage;
     private ViewMemory viewMemory;
 
-    private SimulationManager(Context context) throws IOException {
+    public SimulationManager(Context context) throws IOException {
         this.context = context;
-        this.profileManager = ProfileManager.getInstance(context);
+        this.profileManager = new ProfileManager(context);
         simulations = new HashMap<>();
         storage = new FileSimulationStorage(context);
         readAllInstances();
@@ -52,20 +59,8 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
         instanceListeners = new ArrayList<>();
         existingInstanceIDs = new ArrayList<>(simulations.keySet());
         viewMemory = new ViewMemory(context);
-    }
-
-    public static SimulationManager getInstance(Context context) throws IOException {
-        if (instance == null) {
-            instance = new SimulationManager(context);
-        }
-        return instance;
-    }
-
-    public static SimulationManager getInstance() {
-        if (instance == null) {
-            throw new IllegalStateException("SimulationManager not instantiated");
-        }
-        return instance;
+        genericUpdateListeners = new ArrayList<>();
+        attachmentManager = new AttachmentManager(context);
     }
 
     public ViewMemory getViewMemory() {
@@ -155,6 +150,7 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
         synchronized (instanceListeners) {
             for (InstanceAcquisitionListener instanceListener : instanceListeners) {
                 instanceListener.onInstanceAcquired(sim);
+                updateInstance(sim);
             }
         }
     }
@@ -251,7 +247,6 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
         }
         new HTTPUpdateProvider(this, context).update(sims);
 
-        AttachmentManager attachmentManager = AttachmentManager.getInstance(context);
         Collection<Attachment> allAttachments = new ArrayList<>();
         synchronized (simulations) {
             for (Instance instance : simulations.values()) {
@@ -263,7 +258,6 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
     }
 
     private void updateAttachmentsOf(Instance instance) {
-        AttachmentManager attachmentManager = AttachmentManager.getInstance(context);
         Collection<Attachment> attachments = instance.getAttachments();
         for (Attachment attachment : attachments) {
             String newestOccurrence = instance.getLastOccurrence(attachment.getAttachmentName());
@@ -313,9 +307,20 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
         }
     }
 
+    public void addUpdateListener(UpdateListener listener) {
+        removeUpdateListener(listener);
+        synchronized (genericUpdateListeners) {
+            if (!genericUpdateListeners.contains(listener)) {
+                genericUpdateListeners.add(listener);
+            }
+        }
+    }
+
     public void addUpdateListener(String instanceID, UpdateListener listener) {
         synchronized (updateListenerRegistrations) {
-            updateListenerRegistrations.put(listener, instanceID);
+            if (!genericUpdateListeners.contains(listener)) {
+                updateListenerRegistrations.put(listener, instanceID);
+            }
         }
     }
 
@@ -326,8 +331,17 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
     }
 
     public int removeUpdateListener(UpdateListener listener) {
-        Collection<String> removedInstanceIDs = updateListenerRegistrations.removeAll(listener);
-        return removedInstanceIDs.size();
+        int numRemoved = 0;
+        synchronized (updateListenerRegistrations) {
+            if (genericUpdateListeners.remove(listener)) {
+                numRemoved++;
+            }
+        }
+        synchronized (updateListenerRegistrations) {
+            Collection<String> removedInstanceIDs = updateListenerRegistrations.removeAll(listener);
+            numRemoved += removedInstanceIDs.size();
+        }
+        return numRemoved;
     }
 
     public void updateInstance(Instance instance) {
@@ -340,6 +354,11 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
             Instance instance = getInstance(updatedInstanceID);
             if (instance != null) {
                 writeToFile(instance);
+            }
+        }
+        synchronized (updateListenerRegistrations) {
+            for (UpdateListener listener : genericUpdateListeners) {
+                listener.onUpdate(instanceIDs);
             }
         }
         synchronized (updateListenerRegistrations) {
@@ -361,6 +380,11 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
 
     @Override
     public void onNoUpdates() {
+        synchronized (genericUpdateListeners) {
+            for (UpdateListener listener : genericUpdateListeners) {
+                listener.onNoUpdates();
+            }
+        }
         synchronized (updateListenerRegistrations) {
             for (UpdateListener listener : updateListenerRegistrations.keySet()) {
                 listener.onNoUpdates();
@@ -370,6 +394,11 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
 
     @Override
     public void onUpdateFailed(Collection<String> instanceIDs) {
+        synchronized (genericUpdateListeners) {
+            for (UpdateListener updateListener : genericUpdateListeners) {
+                updateListener.onUpdateFailed(instanceIDs);
+            }
+        }
         synchronized (updateListenerRegistrations) {
             for (UpdateListener updateListener : updateListenerRegistrations.keySet()) {
                 Collection<String> listenedForInstances = updateListenerRegistrations.get(updateListener);
@@ -385,5 +414,13 @@ public class SimulationManager implements InstanceAcquisitionListener, UpdateLis
                 }
             }
         }
+    }
+
+    public ProfileManager getProfileManager() {
+        return profileManager;
+    }
+
+    public AttachmentManager getAttachmentManager() {
+        return attachmentManager;
     }
 }

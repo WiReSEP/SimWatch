@@ -38,11 +38,13 @@ public class SimulationPainter {
     private Snapshot simulation;
     private Activity context;
     private Profile profile;
+    private AttachmentManager attachmentManager;
 
-    public SimulationPainter(Snapshot simulation, Activity context, Profile profile) {
+    public SimulationPainter(Snapshot simulation, Activity context, Profile profile, AttachmentManager attachmentManager) {
         this.simulation = simulation;
         this.context = context;
         this.profile = profile;
+        this.attachmentManager = attachmentManager;
     }
 
     /**
@@ -51,7 +53,7 @@ public class SimulationPainter {
      * @param viewGroup Layout to draw into
      */
     public void draw(ViewGroup viewGroup) {
-        AttachmentManager.getInstance(context).removeAllListeners();
+        attachmentManager.removeAllListeners();
         if (profile != null) {
             for (Map.Entry<String, String> property : profile.getProperties().entrySet()) {
                 drawProperty(viewGroup, property.getKey(), simulation.getData().get(property.getKey()), property.getValue());
@@ -111,7 +113,6 @@ public class SimulationPainter {
 
     private void drawBinaryProperty(ViewGroup viewGroup, String propertyName, Attachment attachment, String typeName) {
         if (viewGroup != null && attachment != null) {
-            AttachmentManager attachmentManager = AttachmentManager.getInstance(context);
             File file = attachmentManager.fileFromAttachmentName(attachment);
             Types.Type type = Types.getType(typeName);
             if (Types.isBinary(type)) {

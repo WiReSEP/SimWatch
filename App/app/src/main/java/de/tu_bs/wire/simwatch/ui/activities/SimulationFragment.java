@@ -21,12 +21,13 @@ import de.tu_bs.wire.simwatch.api.GsonUtil;
 import de.tu_bs.wire.simwatch.api.models.Instance;
 import de.tu_bs.wire.simwatch.api.models.Profile;
 import de.tu_bs.wire.simwatch.api.models.Snapshot;
+import de.tu_bs.wire.simwatch.simulation.AttachmentManager;
 import de.tu_bs.wire.simwatch.ui.SimulationPainter;
 import de.tu_bs.wire.simwatch.ui.SnapshotSelector;
 
 /**
  * A simple {@link Fragment} subclass. Activities that contain this fragment must implement the
- * {@link OnSnapshotSelectedListener} interface to handle interaction events. Use the {@link
+ * {@link SimulationHandlerActivity} interface to handle interaction events. Use the {@link
  * SimulationFragment#newInstance} factory method to create an instance of this fragment.
  */
 public class SimulationFragment extends Fragment {
@@ -108,13 +109,14 @@ public class SimulationFragment extends Fragment {
 
         ArrayAdapter<CharSequence> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item,
                 new ArrayList<CharSequence>());
-        SnapshotSelector snapshotSelector = new SnapshotSelector(getActivity(), instance, profile, (OnSnapshotSelectedListener) getActivity());
+        SnapshotSelector snapshotSelector = new SnapshotSelector(getActivity(), instance, profile, (SimulationHandlerActivity) getActivity());
         snapshotSelector.populateAdapter(adapter);
         snapshotSpinner.setAdapter(adapter);
         snapshotSelector.setPreselection(snapshotSpinner, snapshotID);
         snapshotSpinner.setOnItemSelectedListener(snapshotSelector);
 
-        new SimulationPainter(snapshot, getActivity(), profile).draw(contentView);
+        AttachmentManager attachmentManager = ((SimulationHandlerActivity) getActivity()).getAttachmentManager();
+        new SimulationPainter(snapshot, getActivity(), profile, attachmentManager).draw(contentView);
 
 
         return root;
@@ -123,7 +125,7 @@ public class SimulationFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (!(context instanceof OnSnapshotSelectedListener)) {
+        if (!(context instanceof SimulationHandlerActivity)) {
             throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
         }
     }
@@ -133,10 +135,12 @@ public class SimulationFragment extends Fragment {
         super.onDetach();
     }
 
-    public interface OnSnapshotSelectedListener {
+    public interface SimulationHandlerActivity {
 
         void onSnapshotSelected(int i);
 
         void onNoSnapshotSelected();
+
+        AttachmentManager getAttachmentManager();
     }
 }

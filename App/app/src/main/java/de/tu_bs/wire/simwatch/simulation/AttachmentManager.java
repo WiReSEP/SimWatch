@@ -25,7 +25,6 @@ public class AttachmentManager implements AttachmentDownloadListener {
     public static final String ATTACHMENT_DIR_NAME = "attachments";
     private static final String TAG = "AttachmentManager";
     private static final int[] retryTimes = {1000, 2000, 4000};
-    protected static AttachmentManager instance;
     private final Map<File, Attachment> downloadingFiles;
     // Stores which Update id the downloading version corresponds to
     private final Map<File, String> downloadingVersion;
@@ -47,33 +46,6 @@ public class AttachmentManager implements AttachmentDownloadListener {
         listeners = HashMultimap.create();
         downloadingVersion = new HashMap<>();
         file2tries = new HashMap<>();
-    }
-
-    /**
-     * Returns the instance of the class
-     *
-     * @return The one and only AttachmentManager instance
-     * @throws IllegalStateException If the instance has not been created yet.
-     */
-    public static AttachmentManager getInstance() {
-        if (instance==null) {
-            throw new IllegalStateException("AttachmentManager not initialized");
-        }
-        return instance;
-    }
-
-    /**
-     * Creates the singleton instance of AttachmentManager, if it doesn't exist already, and returns
-     * it
-     *
-     * @param context Application context
-     * @return The one and only AttachmentManager instance
-     */
-    public static AttachmentManager getInstance(Context context) {
-        if (instance == null) {
-            instance = new AttachmentManager(context);
-        }
-        return instance;
     }
 
     /**
