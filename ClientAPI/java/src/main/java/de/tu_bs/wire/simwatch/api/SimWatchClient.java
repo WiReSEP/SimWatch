@@ -101,16 +101,40 @@ public class SimWatchClient {
      */
     public static SimWatchClient registerSimulation(String name, File profileFile)
             throws RegistrationException {
+        Configuration configuration = getConfiguration();
+        SimWatchClient client = new SimWatchClient(configuration);
+        client.register(name, profileFile);
+        return client;
+    }
+
+    /**
+     * Recreate the client from a simulation instance ID.
+     *
+     * @param id ID of the simulation instance previously obtained by {@link #getId()}
+     * @return A client that can be used to send updates from the simulation
+     * @throws RegistrationException if there was an error (e.g. connection issues or an invalid id)
+     */
+    public static SimWatchClient reconnect(String id)
+            throws RegistrationException {
+        Configuration configuration = getConfiguration();
+        SimWatchClient client = new SimWatchClient(configuration);
+        client.fetchInstance(id);
+        return client;
+    }
+
+    /**
+     * Searches for and parses the config file.
+     *
+     * @return The configuration
+     * @throws RegistrationException When there is no config file or it cannot be parsed
+     */
+    private static Configuration getConfiguration() throws RegistrationException {
         Path configFile = findConfigFile();
         if (configFile == null) {
             createExampleConfiguration();
             throw new RegistrationException("No configuration file");
-        } else {
-            Configuration configuration = readConfiguration(configFile);
-            SimWatchClient instance = new SimWatchClient(configuration);
-            instance.register(name, profileFile);
-            return instance;
         }
+        return readConfiguration(configFile);
     }
 
     /**
@@ -174,11 +198,24 @@ public class SimWatchClient {
     /**
      * Returns a human-readable identifier for the registered simulation instance.
      * The original ID assigned by the backend is hashed to make it shorter.
+     * <p>
+     * <strong>Only use this for user-friendly display</strong>. If you want to
+     * recreate the client later via {@link #reconnect(String)}, use {@link #getId()}.
      *
      * @return A short id (5 hex characters) for the registered simulation instance
      */
     public String getShortId() {
         return simInstance.getShortenedID();
+    }
+
+    /**
+     * Returns an identifier for the registered simulation. From this ID the client can
+     * be re-created via {@link #reconnect(String)}.
+     *
+     * @return The identifier for the registered simulation instance
+     */
+    public String getId() {
+        return simInstance.getID();
     }
 
     /**
@@ -205,6 +242,24 @@ public class SimWatchClient {
                 throw new RegistrationException(message);
             }
         } catch (JsonSyntaxException | IOException e) {
+            throw new RegistrationException(e);
+        }
+    }
+
+    private void fetchInstance(String id) throws RegistrationException {
+        try {
+            Call<Instance> register = backend.getInstanceById(id);
+            Response<Instance> response = register.execute();
+            if (response.isSuccess()) {
+                simInstance = response.body();
+                LOG.info(format("Simulation instance '%s' (%s) found",
+                        simInstance.getName(), getShortId()));
+            } else {
+                String message = format("Server responded with Error %d: %s",
+                        response.code(), response.message());
+                throw new RegistrationException(message);
+            }
+        } catch (IOException e) {
             throw new RegistrationException(e);
         }
     }
