@@ -105,6 +105,18 @@ public final class UpdateBuilder {
         return this;
     }
 
+
+    /**
+     * Alias for {@link #attach(String, File) attach(propertyName, new File(fileName))}
+     *
+     * @param propertyName Name of the property as defined in the simulation profile
+     * @param fileName     Name of the file to send in this update.
+     * @return this UpdateBuilder for method chaining
+     */
+    public UpdateBuilder attachFile(String propertyName, String fileName) {
+        return attach(propertyName, new File(fileName));
+    }
+
     /**
      * Construct the simulation update and send it to the backend. This is a synchronous call
      * and will block until finished. Errors are logged.
